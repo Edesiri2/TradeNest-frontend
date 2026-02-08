@@ -1,0 +1,110 @@
+:root {
+  /* Brand Colors */
+  --brand-indigo: #667eea;
+  --brand-purple: #764ba2;
+  --brand-gradient: linear-gradient(135deg, var(--brand-indigo) 0%, var(--brand-purple) 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #5a6fd9 0%, #6a4293 100%);
+  
+  /* Extended Brand Palette */
+  --brand-50: #f5f3ff;
+  --brand-100: #ede9fe;
+  --brand-200: #ddd6fe;
+  --brand-300: #c4b5fd;
+  --brand-400: #a78bfa;
+  --brand-500: #8b5cf6;
+  --brand-600: #7c3aed;
+  --brand-700: #6d28d9;
+  --brand-800: #5b21b6;
+  --brand-900: #4c1d95;
+  
+  /* Sidebar */
+  --sidebar-bg: #1e1b4b;
+  --sidebar-active: rgba(99, 102, 241, 0.2);
+  --sidebar-hover: rgba(99, 102, 241, 0.1);
+  --sidebar-border: #4c1d95;
+}
+
+/* Brand Gradient Background */
+.bg-brand-gradient {
+  background: var(--brand-gradient);
+}
+
+.bg-brand-gradient:hover {
+  background: var(--brand-gradient-hover);
+}
+
+/* Brand Text */
+.text-brand {
+  color: var(--brand-indigo);
+}
+
+.text-brand-purple {
+  color: var(--brand-purple);
+}
+
+/* Brand Borders */
+.border-brand {
+  border-color: var(--brand-indigo);
+}
+
+/* Brand Shadows */
+.shadow-brand {
+  box-shadow: 0 4px 14px 0 rgba(102, 126, 234, 0.4);
+}
+
+/* Sidebar Styles */
+.sidebar {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+}
+
+.sidebar-item-active {
+  background: var(--sidebar-active);
+  border-left: 3px solid var(--brand-indigo);
+  color: white;
+}
+
+.sidebar-item:hover:not(.sidebar-item-active) {
+  background: var(--sidebar-hover);
+}
+
+/* Login/Signup Page Updates */
+.login-header {
+  background: var(--brand-gradient);
+}
+
+.login-button {
+  background: var(--brand-gradient);
+  transition: all 0.3s ease;
+}
+
+.login-button:hover {
+  background: var(--brand-gradient-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Card with Brand Accent */
+.card-brand {
+  border-top: 4px solid;
+  border-image: var(--brand-gradient);
+  border-image-slice: 1;
+}
+
+/* Brand Badge */
+.badge-brand {
+  background: var(--brand-gradient);
+  color: white;
+}
+
+/* Loading Spinner */
+.spinner-brand {
+  border-color: var(--brand-indigo);
+  border-top-color: var(--brand-purple);
+}
+
+/* Brand Focus Rings */
+.focus-brand:focus {
+  ring-color: var(--brand-indigo);
+  border-color: var(--brand-indigo);
+}

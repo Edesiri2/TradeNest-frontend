@@ -1,0 +1,549 @@
+/* Outlets Module - Trendy & Sleek Design */
+.outlets-module {
+  padding: 0;
+}
+
+
+
+.outlets-module__content {
+  padding: 0 1rem;
+}
+
+/* Outlets Header */
+.outlets__header {
+  margin-bottom: 2rem;
+}
+
+.outlets__header-content {
+  display: flex;
+  justify-content: between;
+  gap: 50%;
+  align-items: center;
+}
+
+.outlets__title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.outlets__title-icon {
+  color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 0.5rem;
+  border-radius: 12px;
+}
+
+.outlets__title {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+.outlets__subtitle {
+  color: #718096;
+  font-size: 1.1rem;
+  margin: 0.5rem 0 0 0;
+}
+
+/* Filters */
+.outlets__filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.outlets__search {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+}
+
+.outlets__search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
+}
+
+.outlets__search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background: #fafafa;
+}
+
+.outlets__search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.outlets__filter-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.outlets__filter-select {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.outlets__filter-select:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Outlets Grid */
+.outlets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Outlet Card */
+.outlet-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.outlet-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.outlet-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.outlet-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.outlet-card__icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.outlet-card__info {
+  flex: 1;
+}
+
+.outlet-card__name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+.outlet-card__meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.outlet-card__code {
+  background: #edf2f7;
+  color: #4a5568;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.outlet-card__type {
+  background: #e6fffa;
+  color: #234e52;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.outlet-card__type.retail-store {
+  background: #e6fffa;
+  color: #234e52;
+}
+
+.outlet-card__type.supermarket {
+  background: #f0fff4;
+  color: #22543d;
+}
+
+.outlet-card__type.kiosk {
+  background: #fffaf0;
+  color: #744210;
+}
+
+.outlet-card__type.online {
+  background: #ebf8ff;
+  color: #1a365d;
+}
+
+.outlet-card__type.wholesale {
+  background: #faf5ff;
+  color: #44337a;
+}
+
+.outlet-card__content {
+  space-y: 0.75rem;
+}
+
+.outlet-card__detail {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #4a5568;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.outlet-card__manager {
+  font-style: italic;
+  color: #718096;
+}
+
+.outlet-card__warehouse {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.outlet-card__warehouse-label {
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.outlet-card__warehouse-name {
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.outlet-card__hours {
+  color: #718096;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.outlet-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.outlet-card__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.outlet-card__action {
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #a0aec0;
+}
+
+.outlet-card__action:hover {
+  background: #f7fafc;
+}
+
+.outlet-card__action.edit:hover {
+  color: #667eea;
+}
+
+.outlet-card__action.delete:hover {
+  color: #e53e3e;
+}
+
+/* Status Badge */
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status-badge.inactive {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+/* Outlet Form */
+.outlet-form {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.outlet-form__header {
+  padding: 2rem 2rem 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.outlet-form__title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.outlet-form__icon {
+  color: #667eea;
+}
+
+.outlet-form__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.outlet-form__error {
+  background: #fed7d7;
+  color: #742a2a;
+  padding: 1rem 2rem;
+  border-left: 4px solid #e53e3e;
+  margin: 0 2rem;
+  border-radius: 0 0 8px 8px;
+}
+
+.outlet-form__content {
+  padding: 2rem;
+}
+
+.outlet-form__section {
+  margin-bottom: 2.5rem;
+}
+
+.outlet-form__section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+}
+
+.outlet-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.outlet-form__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.outlet-form__label {
+  font-weight: 500;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.outlet-form__input,
+.outlet-form__select {
+  padding: 0.875rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background: #fafafa;
+}
+
+.outlet-form__input:focus,
+.outlet-form__select:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.outlet-form__error-text {
+  color: #e53e3e;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.outlet-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Empty State */
+.outlets-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #718096;
+}
+
+.outlets-empty__icon {
+  margin: 0 auto 1.5rem;
+  opacity: 0.5;
+  color: #a0aec0;
+}
+
+.outlets-empty__title {
+  font-size: 1.5rem;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+
+.outlets-empty__description {
+  margin-bottom: 2rem;
+  font-size: 1rem;
+}
+
+/* Pagination */
+.outlets-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1.5rem;
+}
+
+.outlets-pagination__btn {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #e2e8f0;
+  background: white;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.outlets-pagination__btn:hover:not(:disabled) {
+  border-color: #667eea;
+  background: #667eea;
+  color: white;
+}
+
+.outlets-pagination__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.outlets-pagination__info {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+/* Loading & Error States */
+.outlet-loading,
+.outlet-error {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.1rem;
+}
+
+.outlet-loading {
+  color: #667eea;
+}
+
+.outlet-error {
+  color: #e53e3e;
+  background: #fed7d7;
+  border-radius: 12px;
+  margin: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .outlets__filters {
+    flex-direction: column;
+  }
+  
+  .outlets__search {
+    max-width: none;
+  }
+  
+  .outlet-form__grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .outlets-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .outlet-card__header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .outlet-card__meta {
+    justify-content: center;
+  }
+}
