@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Package } from 'lucide-react';
 import { productStore } from '../../lib/store/productStore';
-import { PRODUCT_CATEGORIES } from '../../lib/constants';
-import { generateSKU } from '../../lib/utils/utils';
+import { productAPI } from '../../lib/api/productApi';
 import { Button } from '../ui';
 import { locationAPI } from '../../lib/api/locationApi'; // NEW IMPORT
 import './inventory.css';
@@ -23,6 +22,7 @@ interface Location {
 
 const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) => {
   const { addProduct, updateProduct, loading, error } = productStore();
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -49,7 +49,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
       setFormData({
         name: product.name,
         description: product.description || '',
-        category: product.category,
+        category: resolveCategoryName(product.category),
         brand: product.brand,
         costPrice: product.costPrice.toString(),
         sellingPrice: product.sellingPrice.toString(),
@@ -60,14 +60,37 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
         locationId: product.locationId || ''
       });
     } else {
-      // Set default category for new product
+      // Set defaults for new product
       setFormData(prev => ({
         ...prev,
-        category: PRODUCT_CATEGORIES[0],
+        category: '',
         lowStockAlert: '5',
         currentStock: '0'
       }));
     }
+  }, [product]);
+
+  useEffect(() => {
+    const fetchProductCategories = async () => {
+      try {
+        const response = await productAPI.getProductCategories();
+        const options = (response.data || [])
+          .map((category: any) => resolveCategoryName(category))
+          .filter((name: string) => Boolean(name));
+        setCategoryOptions(options);
+
+        if (!product) {
+          setFormData((prev) => ({
+            ...prev,
+            category: prev.category || options[0] || ''
+          }));
+        }
+      } catch (categoryError) {
+        console.error('Failed to load product categories:', categoryError);
+      }
+    };
+
+    fetchProductCategories();
   }, [product]);
 
   // UPDATED EFFECT TO FETCH LOCATIONS FROM ACTUAL API
@@ -167,7 +190,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
       lowStockAlert: parseInt(formData.lowStockAlert),
       supplierId: formData.supplierId || '',
       locationType: formData.locationType,
-      locationId: formData.locationId
+      locationId: formData.locationId,
+      status: parseInt(formData.currentStock, 10) > 0 ? 'in-stock' : 'out-of-stock'
     };
 
     // Set correct ID field based on locationType
@@ -271,7 +295,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
                 disabled={loading}
               >
                 <option value="">Select Category</option>
-                {PRODUCT_CATEGORIES.map(category => (
+                {categoryOptions.map(category => (
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
@@ -430,3 +454,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
 };
 
 export default ProductForm;
+
+const resolveCategoryName = (category: unknown): string => {
+  if (typeof category === 'string') return category;
+  if (category && typeof category === 'object') {
+    const categoryObject = category as { name?: string; category?: string };
+    return categoryObject.name || categoryObject.category || '';
+  }
+  return '';
+};

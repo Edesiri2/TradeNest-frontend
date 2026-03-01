@@ -27,7 +27,7 @@ interface UserStore {
   setError: (error: string | null) => void;
 }
 
-export const useUserStore = create<UserStore>((set, get) => ({
+export const useUserStore = create<UserStore>((set) => ({
   // Initial state
   users: [],
   userStats: null,
@@ -112,12 +112,17 @@ export const useUserStore = create<UserStore>((set, get) => ({
     try {
       const token = useAuthStore.getState().token;
       if (!token) throw new Error('No authentication token found');
-      
-      const response = await userAPI.createUser(token, data);
+
+      const { outletId, ...userData } = data;
+      const response = await userAPI.createUser(token, userData);
       const newUser = {
         id: response.data._id,
         ...response.data
       };
+
+      if (outletId) {
+        await userAPI.assignOutlet(token, newUser.id, outletId);
+      }
       
       // Add to local state
       set(state => ({
@@ -138,8 +143,14 @@ export const useUserStore = create<UserStore>((set, get) => ({
     try {
       const token = useAuthStore.getState().token;
       if (!token) throw new Error('No authentication token found');
-      
-      const response = await userAPI.updateUser(token, id, data);
+
+      const { outletId, ...userData } = data;
+      const response = await userAPI.updateUser(token, id, userData);
+
+      if (outletId) {
+        await userAPI.assignOutlet(token, id, outletId);
+      }
+
       const updatedUser = {
         id: response.data._id,
         ...response.data

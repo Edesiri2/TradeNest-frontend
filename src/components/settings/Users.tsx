@@ -8,11 +8,18 @@ import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
 import Table from '../../components/ui/Table';
 import { formatDate } from '../../lib/utils/utils';
+import { locationAPI } from '../../lib/api/locationApi';
+
+interface OutletOption {
+  id: string;
+  name: string;
+  code: string;
+}
 
 const Users: React.FC = () => {
-  const { users, loading, error, pagination, fetchUsers, createUser, updateUser, deleteUser, setSelectedUser, selectedUser } = useUserStore();
+  const { users, pagination, fetchUsers, createUser, updateUser, deleteUser, setSelectedUser, selectedUser } = useUserStore();
   const { token } = useAuthStore();
-  const { canCreateUsers, canEditUsers, canDeleteUsers, user: currentUser } = usePermissions();
+  const { canEditUsers, canDeleteUsers, user: currentUser } = usePermissions();
   
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -20,6 +27,7 @@ const Users: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [outlets, setOutlets] = useState<OutletOption[]>([]);
   
   const [newUser, setNewUser] = useState({
     email: '',
@@ -27,10 +35,11 @@ const Users: React.FC = () => {
     firstName: '',
     lastName: '',
     roleId: '',
+    outletId: '',
     isActive: true
   });
 
-  const [roles, setRoles] = useState<Array<{ id: string; name: string; description: string }>>([]);
+  const [roles] = useState<Array<{ id: string; name: string; description: string }>>([]);
 
   useEffect(() => {
     if (token) {
@@ -39,6 +48,26 @@ const Users: React.FC = () => {
       // fetchRoles();
     }
   }, [token]);
+
+  useEffect(() => {
+    const loadOutlets = async () => {
+      try {
+        const response = await locationAPI.getOutlets();
+        const mappedOutlets = (response.data || [])
+          .filter((outlet: any) => outlet.isActive)
+          .map((outlet: any) => ({
+            id: outlet._id,
+            name: outlet.name,
+            code: outlet.code
+          }));
+        setOutlets(mappedOutlets);
+      } catch (outletError) {
+        console.error('Failed to load outlets for user assignment:', outletError);
+      }
+    };
+
+    loadOutlets();
+  }, []);
 
   const handleSearch = () => {
     fetchUsers({
@@ -59,6 +88,7 @@ const Users: React.FC = () => {
         firstName: '',
         lastName: '',
         roleId: '',
+        outletId: '',
         isActive: true
       });
     } catch (error) {
@@ -103,11 +133,14 @@ const Users: React.FC = () => {
     setShowDeleteModal(true);
   };
 
+  const selectedRoleName = roles.find((role) => role.id === newUser.roleId)?.name || '';
+  const isSuperAdminRole = selectedRoleName === 'super_admin';
+
   const columns = [
     {
       key: 'fullName',
       title: 'Name',
-      render: (value: any, record: any) => (
+      render: (_value: any, record: any) => (
         <div className="flex items-center">
           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
             <span className="text-blue-600 font-medium">
@@ -149,23 +182,23 @@ const Users: React.FC = () => {
     {
       key: 'isEmailVerified',
       title: 'Verified',
-      render: (value: boolean) => (
-        <span className={value ? 'text-green-600' : 'text-yellow-600'}>
-          {value ? 'Yes' : 'No'}
+      render: (isVerified: boolean) => (
+        <span className={isVerified ? 'text-green-600' : 'text-yellow-600'}>
+          {isVerified ? 'Yes' : 'No'}
         </span>
       )
     },
     {
       key: 'lastLogin',
       title: 'Last Login',
-      render: (value: string) => (
-        <span>{value ? formatDate(new Date(value)) : 'Never'}</span>
+      render: (lastLogin: string) => (
+        <span>{lastLogin ? formatDate(new Date(lastLogin)) : 'Never'}</span>
       )
     },
     {
       key: 'actions',
       title: 'Actions',
-      render: (value: any, record: any) => (
+      render: (_value: any, record: any) => (
         <div className="flex space-x-2">
           <PermissionGuard requiredPermission="users.update">
             <Button
@@ -327,13 +360,41 @@ const Users: React.FC = () => {
             <select
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={newUser.roleId}
-              onChange={(e) => setNewUser({ ...newUser, roleId: e.target.value })}
+              onChange={(e) => {
+                const nextRoleId = e.target.value;
+                const nextRole = roles.find((role) => role.id === nextRoleId);
+                const shouldClearOutlet = nextRole?.name === 'super_admin';
+                setNewUser({
+                  ...newUser,
+                  roleId: nextRoleId,
+                  outletId: shouldClearOutlet ? '' : newUser.outletId
+                });
+              }}
               required
             >
               <option value="">Select Role</option>
               {roles.map(role => (
                 <option key={role.id} value={role.id}>
                   {role.name} - {role.description}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Outlet {isSuperAdminRole ? '(Not required for super admin)' : '*'}
+            </label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={newUser.outletId}
+              onChange={(e) => setNewUser({ ...newUser, outletId: e.target.value })}
+              disabled={isSuperAdminRole}
+              required={!isSuperAdminRole}
+            >
+              <option value="">{isSuperAdminRole ? 'System generated user' : 'Select Outlet'}</option>
+              {outlets.map(outlet => (
+                <option key={outlet.id} value={outlet.id}>
+                  {outlet.name} ({outlet.code})
                 </option>
               ))}
             </select>

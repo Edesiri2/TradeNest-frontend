@@ -232,17 +232,17 @@ const Login: React.FC = () => {
           </form>
 
           {/* Divider */}
-          <div className="relative my-8">
+          {/* <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-white text-gray-500">Or continue with</span>
             </div>
-          </div>
+          </div> */}
 
           {/* Social Login */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               disabled={isLoading}
@@ -277,10 +277,10 @@ const Login: React.FC = () => {
               <Github className="w-5 h-5" />
               GitHub
             </button>
-          </div>
+          </div> */}
 
           {/* Sign Up Link */}
-          <div className="mt-8 text-center text-sm text-gray-600">
+          {/* <div className="mt-8 text-center text-sm text-gray-600">
             Don't have an account?{' '}
             <Link
               to="/register"
@@ -288,7 +288,7 @@ const Login: React.FC = () => {
             >
               Sign up
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
 

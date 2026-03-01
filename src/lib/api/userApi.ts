@@ -1,5 +1,5 @@
 import { API_BASE_URL } from './config';
-import type { CreateUserData, UpdateUserData, UserStats } from '../../types/user';
+import type { CreateUserData, UpdateUserData } from '../../types/user';
 
 const apiRequest = async (endpoint: string, token: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -84,6 +84,14 @@ export const userAPI = {
     return apiRequest(`/users/${id}`, token, {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+  },
+
+  // Assign outlet to user
+  assignOutlet: (token: string, id: string, outletId: string) => {
+    return apiRequest(`/users/${id}/assign-outlet`, token, {
+      method: 'PATCH',
+      body: JSON.stringify({ outletId }),
     });
   },
 

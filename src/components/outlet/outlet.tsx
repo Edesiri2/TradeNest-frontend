@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { Store, Plus } from 'lucide-react';
-import { Button } from '../ui';
 import OutletList from './outletList';
 import OutletForm from './OutletForm';
 import './outlets.css';
@@ -33,12 +31,6 @@ const Outlets: React.FC = () => {
 
   return (
     <div className="outlets-module">
-      {currentView === 'list' && (
-        <div className="outlets-module__header">
-         
-        </div>
-      )}
-
       <div className="outlets-module__content">
         {currentView === 'list' && (
           <OutletList

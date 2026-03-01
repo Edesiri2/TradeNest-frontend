@@ -16,11 +16,11 @@ interface Product {
   lowStockAlert: number;
   supplierId?: string;
   warehouseId: string;
+  outletId?: string;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
-  // NEW FIELDS ADDED BELOW
-  status?: 'pending' | 'approved' | 'rejected';
+  status?: 'in-stock' | 'out-of-stock' | 'pending' | 'approved' | 'rejected';
   locationType?: 'warehouse' | 'outlet';
   locationId?: string;
   approvedBy?: string;
@@ -71,7 +71,7 @@ interface InventoryState {
   rejectProduct: (productId: string, rejectionReason: string) => Promise<void>;
 }
 
-export const productStore = create<InventoryState>((set, get) => ({
+export const productStore = create<InventoryState>((set) => ({
   // Initial state
   products: [],
   categories: [],
@@ -208,8 +208,15 @@ export const productStore = create<InventoryState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await productAPI.getCategories();
+      const categories = (response.data || [])
+        .map((category: any) => {
+          if (typeof category === 'string') return category;
+          if (category && typeof category === 'object') return category.name || category.category || '';
+          return '';
+        })
+        .filter((category: string) => Boolean(category));
       set({ 
-        categories: response.data,
+        categories,
         loading: false 
       });
     } catch (error: any) {

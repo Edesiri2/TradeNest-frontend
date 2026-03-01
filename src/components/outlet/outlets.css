@@ -305,8 +305,62 @@
   color: #667eea;
 }
 
+.outlet-card__action.link:hover {
+  color: #2563eb;
+}
+
+.outlet-card__action.unlink:hover {
+  color: #d97706;
+}
+
 .outlet-card__action.delete:hover {
   color: #e53e3e;
+}
+
+.outlet-card__action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.outlet-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.warehouse-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.warehouse-badge.linked {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.warehouse-badge.standalone {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.outlet-cell-title {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.outlet-cell-subtitle {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.outlet-link-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 /* Status Badge */

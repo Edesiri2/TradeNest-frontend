@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { jwtDecode } from 'jwt-decode';
-import type { AuthState, User, LoginCredentials, AuthResponse } from '../../types/auth';
+import type { AuthState, User, LoginCredentials } from '../../types/auth';
 import { authAPI } from '../api/authApi';
 
 // Extend AuthState with new methods
@@ -44,6 +44,15 @@ const decodeToken = (token: string): { user: User; permissions: string[] } => {
       roleName = decoded.roleName;
     }
     
+    const decodedOutlet =
+      decoded.outlet && typeof decoded.outlet === 'object'
+        ? {
+            id: decoded.outlet.id || decoded.outlet._id || decoded.outletId || '',
+            name: decoded.outlet.name,
+            code: decoded.outlet.code
+          }
+        : null;
+
     return {
       user: {
         id: decoded.userId || decoded.id,
@@ -58,6 +67,8 @@ const decodeToken = (token: string): { user: User; permissions: string[] } => {
         },
         isEmailVerified: decoded.isEmailVerified || false,
         lastLogin: decoded.lastLogin || new Date().toISOString(),
+        outlet: decodedOutlet,
+        outletId: decodedOutlet?.id || decoded.outletId || '',
         createdAt: decoded.createdAt || new Date().toISOString(),
         updatedAt: decoded.updatedAt || new Date().toISOString()
       },
@@ -71,6 +82,26 @@ const decodeToken = (token: string): { user: User; permissions: string[] } => {
 
 // Merge user data from API response with token data
 const mergeUserData = (apiUser: any, tokenUser: User): User => {
+  const apiOutlet =
+    apiUser?.outlet && typeof apiUser.outlet === 'object'
+      ? {
+          id: apiUser.outlet.id || apiUser.outlet._id || '',
+          name: apiUser.outlet.name,
+          code: apiUser.outlet.code
+        }
+      : null;
+
+  const tokenOutlet =
+    tokenUser?.outlet && typeof tokenUser.outlet === 'object'
+      ? {
+          id: tokenUser.outlet.id || '',
+          name: tokenUser.outlet.name,
+          code: tokenUser.outlet.code
+        }
+      : null;
+
+  const outlet = apiOutlet || tokenOutlet;
+
   return {
     id: apiUser.id || tokenUser.id,
     email: apiUser.email || tokenUser.email,
@@ -84,6 +115,8 @@ const mergeUserData = (apiUser: any, tokenUser: User): User => {
     },
     isEmailVerified: apiUser.isEmailVerified !== undefined ? apiUser.isEmailVerified : tokenUser.isEmailVerified,
     lastLogin: apiUser.lastLogin || tokenUser.lastLogin,
+    outlet,
+    outletId: apiUser.outletId || outlet?.id || tokenUser.outletId || '',
     createdAt: apiUser.createdAt || tokenUser.createdAt,
     updatedAt: apiUser.updatedAt || tokenUser.updatedAt
   };
@@ -184,12 +217,13 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       checkAuth: () => {
-        const { token } = get();
+        const { token, user } = get();
         if (token) {
           try {
             const decoded = decodeToken(token);
+            const mergedUser = user ? mergeUserData(user, decoded.user) : decoded.user;
             set({ 
-              user: decoded.user,
+              user: mergedUser,
               permissions: decoded.permissions,
               isAuthenticated: true 
             });

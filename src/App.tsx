@@ -17,6 +17,7 @@ import StockTransferModule from './components/warehouse/stock-transfer';
 import OutletModule from './components/outlet/outlet';
 import Users from './components/settings/Users';
 import Roles from './components/settings/Roles';
+import ProductCategories from './components/settings/ProductCategories';
 import { useAuthStore } from './lib/store/useAuthStore';
 
 // Protected route component
@@ -66,15 +67,16 @@ function App() {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="inventory/products" element={<Inventory />} />
               <Route path="sales/pos" element={<Sales />} />
-              <Route path="settings/outlets" element={<OutletModule />} />
+              <Route path="outlets" element={<OutletModule />} />
               <Route path="reports/sales" element={<Reports />} />
-              <Route path="warehouse/overview" element={<WarehouseModule />} />
-              <Route path="warehouse/transfers" element={<StockTransferModule />} />
+              <Route path="warehouse" element={<WarehouseModule />} />
+              <Route path="transfers/stock" element={<StockTransferModule />} />
 
               {/* Settings routes */}
               <Route path="settings">
                 <Route path="users" element={<Users />} />
                 <Route path="roles" element={<Roles />} />
+                <Route path="product-categories" element={<ProductCategories />} />
               </Route>
             </Route>
             

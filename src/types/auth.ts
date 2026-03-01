@@ -29,6 +29,13 @@ export interface AuthResponse {
       };
       isEmailVerified: boolean;
       lastLogin: string;
+      outlet?: {
+        id?: string;
+        _id?: string;
+        name?: string;
+        code?: string;
+      } | null;
+      outletId?: string;
       createdAt?: string;
       updatedAt?: string;
     };
@@ -53,6 +60,12 @@ export interface User {
   role: Role;
   isEmailVerified: boolean;
   lastLogin: string;
+  outlet?: {
+    id: string;
+    name?: string;
+    code?: string;
+  } | null;
+  outletId?: string;
   createdAt: string;
   updatedAt: string;
 }

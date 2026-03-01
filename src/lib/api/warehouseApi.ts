@@ -17,7 +17,17 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      const apiError = new Error(data.message || `HTTP error! status: ${response.status}`) as Error & {
+        success?: boolean;
+        details?: {
+          linkedOutlets?: number;
+          linkedProducts?: number;
+          [key: string]: unknown;
+        };
+      };
+      apiError.success = data.success;
+      apiError.details = data.details;
+      throw apiError;
     }
 
     return data;

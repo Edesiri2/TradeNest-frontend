@@ -487,7 +487,13 @@
     flex-direction: column;
   }
   
-  .ui-modal__footer .ui-button {
+.ui-modal__footer .ui-button {
     width: 100%;
   }
+}
+
+.confirm-dialog__message {
+  margin: 0;
+  color: var(--ui-text-primary);
+  line-height: 1.5;
 }

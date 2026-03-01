@@ -11,8 +11,11 @@ export interface Product extends BaseEntity {
   currentStock: number;
   lowStockAlert: number;
   supplierId?: string;
-  warehouseId: string;
+  warehouseId?: string;
   outletId?: string;
+  locationType?: 'warehouse' | 'outlet';
+  locationId?: string;
+  status?: 'in-stock' | 'out-of-stock';
   barcode?: string;
   imageUrl?: string;
   isActive: boolean;

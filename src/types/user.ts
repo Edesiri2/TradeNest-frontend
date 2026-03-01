@@ -11,6 +11,13 @@ export interface UserManagement {
   };
   isEmailVerified: boolean;
   isActive: boolean;
+  outlet?: {
+    id?: string;
+    _id?: string;
+    name?: string;
+    code?: string;
+  } | null;
+  outletId?: string;
   lastLogin: string;
   createdAt: string;
   updatedAt: string;
@@ -22,6 +29,7 @@ export interface CreateUserData {
   firstName: string;
   lastName: string;
   roleId: string;
+  outletId?: string;
   isActive?: boolean;
 }
 
@@ -29,6 +37,7 @@ export interface UpdateUserData {
   firstName?: string;
   lastName?: string;
   roleId?: string;
+  outletId?: string;
   isActive?: boolean;
 }
 

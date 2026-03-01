@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, Store, Clock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Clock, Save, Store, X } from 'lucide-react';
+import { warehouseAPI } from '../../lib/api/warehouseApi';
 import { useOutletStore } from '../../lib/store/outletStore';
 import { Button } from '../ui';
 import './outlets.css';
@@ -10,8 +11,17 @@ interface OutletFormProps {
   onCancel: () => void;
 }
 
+interface WarehouseOption {
+  id: string;
+  name: string;
+  code: string;
+}
+
 const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => {
-  const { createOutlet, updateOutlet, loading, error, outletTypes } = useOutletStore();
+  const { createOutlet, updateOutlet, loading, error, outletTypes, fetchOutletTypes } = useOutletStore();
+  const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
+  const [warehousesLoading, setWarehousesLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -41,25 +51,54 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
+    fetchOutletTypes();
+  }, [fetchOutletTypes]);
+
+  useEffect(() => {
+    const loadWarehouses = async () => {
+      setWarehousesLoading(true);
+      try {
+        const response = await warehouseAPI.getWarehouses({ limit: 1000, active: true });
+        const warehouseOptions = (response.data || []).map((warehouse: any) => ({
+          id: warehouse._id || warehouse.id,
+          name: warehouse.name,
+          code: warehouse.code
+        }));
+        setWarehouses(warehouseOptions);
+      } catch (loadError) {
+        console.error('Failed to load warehouses:', loadError);
+      } finally {
+        setWarehousesLoading(false);
+      }
+    };
+
+    loadWarehouses();
+  }, []);
+
+  useEffect(() => {
     if (outlet) {
       setFormData({
         name: outlet.name,
         code: outlet.code,
         type: outlet.type,
         address: {
-          street: outlet.address.street || '',
-          city: outlet.address.city,
-          state: outlet.address.state || '',
-          country: outlet.address.country || 'Nigeria',
-          postalCode: outlet.address.postalCode || ''
+          street: outlet.address?.street || '',
+          city: outlet.address?.city || '',
+          state: outlet.address?.state || '',
+          country: outlet.address?.country || 'Nigeria',
+          postalCode: outlet.address?.postalCode || ''
         },
         contact: {
-          phone: outlet.contact.phone || '',
-          email: outlet.contact.email || '',
-          manager: outlet.contact.manager || ''
+          phone: outlet.contact?.phone || '',
+          email: outlet.contact?.email || '',
+          manager: outlet.contact?.manager || ''
         },
-        warehouse: typeof outlet.warehouse === 'object' ? outlet.warehouse.id : outlet.warehouse,
-        operatingHours: outlet.operatingHours,
+        warehouse: typeof outlet.warehouse === 'object' ? outlet.warehouse?.id || '' : outlet.warehouse || '',
+        operatingHours: {
+          open: outlet.operatingHours?.open || '08:00',
+          close: outlet.operatingHours?.close || '18:00',
+          timezone: outlet.operatingHours?.timezone || 'WAT'
+        },
         isActive: outlet.isActive
       });
     }
@@ -71,57 +110,64 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
     if (!formData.name.trim()) newErrors.name = 'Outlet name is required';
     if (!formData.code.trim()) newErrors.code = 'Outlet code is required';
     if (!formData.type) newErrors.type = 'Outlet type is required';
-    if (!formData.warehouse) newErrors.warehouse = 'Warehouse assignment is required';
     if (!formData.address.city.trim()) newErrors.city = 'City is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setFormError(null);
-    
+
     if (!validateForm()) return;
+
+    const payload: Record<string, unknown> = {
+      ...formData,
+      code: formData.code.trim().toUpperCase()
+    };
+
+    if (!formData.warehouse) {
+      delete payload.warehouse;
+    }
 
     try {
       if (outlet) {
-        await updateOutlet(outlet.id, formData);
+        await updateOutlet(outlet.id, payload);
       } else {
-        await createOutlet(formData);
+        await createOutlet(payload);
       }
       onSave();
-    } catch (error: any) {
-      setFormError(error.message || 'Failed to save outlet');
+    } catch (saveError: any) {
+      setFormError(saveError.message || 'Failed to save outlet');
     }
   };
 
   const handleInputChange = (field: string, value: any) => {
     if (field.startsWith('address.')) {
       const addressField = field.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        address: { ...prev.address, [addressField]: value }
+      setFormData((previous) => ({
+        ...previous,
+        address: { ...previous.address, [addressField]: value }
       }));
     } else if (field.startsWith('contact.')) {
       const contactField = field.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        contact: { ...prev.contact, [contactField]: value }
+      setFormData((previous) => ({
+        ...previous,
+        contact: { ...previous.contact, [contactField]: value }
       }));
     } else if (field.startsWith('operatingHours.')) {
       const hoursField = field.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        operatingHours: { ...prev.operatingHours, [hoursField]: value }
+      setFormData((previous) => ({
+        ...previous,
+        operatingHours: { ...previous.operatingHours, [hoursField]: value }
       }));
     } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
+      setFormData((previous) => ({ ...previous, [field]: value }));
     }
 
-    // Clear errors
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((previous) => ({ ...previous, [field]: '' }));
     }
     if (formError) {
       setFormError(null);
@@ -133,17 +179,11 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
       <div className="outlet-form__header">
         <div className="outlet-form__title-section">
           <Store size={24} className="outlet-form__icon" />
-          <h2 className="outlet-form__title">
-            {outlet ? 'Edit Outlet' : 'Create New Outlet'}
-          </h2>
+          <h2 className="outlet-form__title">{outlet ? 'Edit Outlet' : 'Create New Outlet'}</h2>
         </div>
       </div>
 
-      {(error || formError) && (
-        <div className="outlet-form__error">
-          {error || formError}
-        </div>
-      )}
+      {(error || formError) && <div className="outlet-form__error">{error || formError}</div>}
 
       <form onSubmit={handleSubmit} className="outlet-form__content">
         <div className="outlet-form__section">
@@ -154,7 +194,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                onChange={(event) => handleInputChange('name', event.target.value)}
                 className="outlet-form__input"
                 placeholder="Enter outlet name"
                 disabled={loading}
@@ -167,7 +207,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <input
                 type="text"
                 value={formData.code}
-                onChange={(e) => handleInputChange('code', e.target.value.toUpperCase())}
+                onChange={(event) => handleInputChange('code', event.target.value.toUpperCase())}
                 className="outlet-form__input"
                 placeholder="e.g., OUT_MALL"
                 disabled={loading}
@@ -179,28 +219,34 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <label className="outlet-form__label">Outlet Type *</label>
               <select
                 value={formData.type}
-                onChange={(e) => handleInputChange('type', e.target.value)}
+                onChange={(event) => handleInputChange('type', event.target.value)}
                 className="outlet-form__select"
                 disabled={loading}
               >
-                {outletTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
+                {(outletTypes.length > 0 ? outletTypes : ['Retail Store']).map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
                 ))}
               </select>
               {errors.type && <span className="outlet-form__error-text">{errors.type}</span>}
             </div>
 
             <div className="outlet-form__group">
-              <label className="outlet-form__label">Warehouse *</label>
-              <input
-                type="text"
+              <label className="outlet-form__label">Linked Warehouse (Optional)</label>
+              <select
                 value={formData.warehouse}
-                onChange={(e) => handleInputChange('warehouse', e.target.value)}
-                className="outlet-form__input"
-                placeholder="Enter warehouse ID"
-                disabled={loading}
-              />
-              {errors.warehouse && <span className="outlet-form__error-text">{errors.warehouse}</span>}
+                onChange={(event) => handleInputChange('warehouse', event.target.value)}
+                className="outlet-form__select"
+                disabled={loading || warehousesLoading}
+              >
+                <option value="">No warehouse (standalone)</option>
+                {warehouses.map((warehouse) => (
+                  <option key={warehouse.id} value={warehouse.id}>
+                    {warehouse.name} ({warehouse.code})
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -213,7 +259,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <input
                 type="text"
                 value={formData.address.street}
-                onChange={(e) => handleInputChange('address.street', e.target.value)}
+                onChange={(event) => handleInputChange('address.street', event.target.value)}
                 className="outlet-form__input"
                 placeholder="Enter street address"
                 disabled={loading}
@@ -225,7 +271,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <input
                 type="text"
                 value={formData.address.city}
-                onChange={(e) => handleInputChange('address.city', e.target.value)}
+                onChange={(event) => handleInputChange('address.city', event.target.value)}
                 className="outlet-form__input"
                 placeholder="Enter city"
                 disabled={loading}
@@ -238,7 +284,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <input
                 type="text"
                 value={formData.address.state}
-                onChange={(e) => handleInputChange('address.state', e.target.value)}
+                onChange={(event) => handleInputChange('address.state', event.target.value)}
                 className="outlet-form__input"
                 placeholder="Enter state"
                 disabled={loading}
@@ -250,7 +296,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <input
                 type="text"
                 value={formData.address.postalCode}
-                onChange={(e) => handleInputChange('address.postalCode', e.target.value)}
+                onChange={(event) => handleInputChange('address.postalCode', event.target.value)}
                 className="outlet-form__input"
                 placeholder="Enter postal code"
                 disabled={loading}
@@ -267,7 +313,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <input
                 type="tel"
                 value={formData.contact.phone}
-                onChange={(e) => handleInputChange('contact.phone', e.target.value)}
+                onChange={(event) => handleInputChange('contact.phone', event.target.value)}
                 className="outlet-form__input"
                 placeholder="Enter phone number"
                 disabled={loading}
@@ -279,7 +325,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <input
                 type="email"
                 value={formData.contact.email}
-                onChange={(e) => handleInputChange('contact.email', e.target.value)}
+                onChange={(event) => handleInputChange('contact.email', event.target.value)}
                 className="outlet-form__input"
                 placeholder="Enter email address"
                 disabled={loading}
@@ -291,7 +337,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <input
                 type="text"
                 value={formData.contact.manager}
-                onChange={(e) => handleInputChange('contact.manager', e.target.value)}
+                onChange={(event) => handleInputChange('contact.manager', event.target.value)}
                 className="outlet-form__input"
                 placeholder="Enter manager name"
                 disabled={loading}
@@ -311,7 +357,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <input
                 type="time"
                 value={formData.operatingHours.open}
-                onChange={(e) => handleInputChange('operatingHours.open', e.target.value)}
+                onChange={(event) => handleInputChange('operatingHours.open', event.target.value)}
                 className="outlet-form__input"
                 disabled={loading}
               />
@@ -322,7 +368,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <input
                 type="time"
                 value={formData.operatingHours.close}
-                onChange={(e) => handleInputChange('operatingHours.close', e.target.value)}
+                onChange={(event) => handleInputChange('operatingHours.close', event.target.value)}
                 className="outlet-form__input"
                 disabled={loading}
               />
@@ -332,7 +378,7 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
               <label className="outlet-form__label">Status</label>
               <select
                 value={formData.isActive.toString()}
-                onChange={(e) => handleInputChange('isActive', e.target.value === 'true')}
+                onChange={(event) => handleInputChange('isActive', event.target.value === 'true')}
                 className="outlet-form__select"
                 disabled={loading}
               >
@@ -344,22 +390,11 @@ const OutletForm: React.FC<OutletFormProps> = ({ outlet, onSave, onCancel }) => 
         </div>
 
         <div className="outlet-form__actions">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onCancel} 
-            icon={X}
-            disabled={loading}
-          >
+          <Button type="button" variant="outline" onClick={onCancel} icon={X} disabled={loading}>
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            variant="primary" 
-            icon={Save}
-            disabled={loading}
-          >
-            {loading ? 'Saving...' : (outlet ? 'Update Outlet' : 'Create Outlet')}
+          <Button type="submit" variant="primary" icon={Save} disabled={loading}>
+            {loading ? 'Saving...' : outlet ? 'Update Outlet' : 'Create Outlet'}
           </Button>
         </div>
       </form>

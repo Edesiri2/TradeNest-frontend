@@ -45,6 +45,9 @@ export const productAPI = {
   getProducts: (params?: { 
     search?: string; 
     category?: string; 
+    status?: string;
+    locationType?: 'warehouse' | 'outlet';
+    locationId?: string;
     page?: number; 
     limit?: number;
     sortBy?: string;
@@ -53,6 +56,9 @@ export const productAPI = {
     const queryParams = new URLSearchParams();
     if (params?.search) queryParams.append('search', params.search);
     if (params?.category && params.category !== 'all') queryParams.append('category', params.category);
+    if (params?.status && params.status !== 'all') queryParams.append('status', params.status);
+    if (params?.locationType) queryParams.append('locationType', params.locationType);
+    if (params?.locationId) queryParams.append('locationId', params.locationId);
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
@@ -97,6 +103,38 @@ export const productAPI = {
     return apiRequest('/products/categories');
   },
 
+  // Category CRUD (Settings)
+  getProductCategories: () => {
+    return apiRequest('/products/categories');
+  },
+
+  getProductCategory: (id: string) => {
+    return apiRequest(`/products/categories/${id}`);
+  },
+
+  createProductCategory: (categoryData: { name: string; description?: string; isActive?: boolean }) => {
+    return apiRequest('/products/categories', {
+      method: 'POST',
+      body: JSON.stringify(categoryData),
+    });
+  },
+
+  updateProductCategory: (
+    id: string,
+    categoryData: { name?: string; description?: string; isActive?: boolean }
+  ) => {
+    return apiRequest(`/products/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(categoryData),
+    });
+  },
+
+  deleteProductCategory: (id: string) => {
+    return apiRequest(`/products/categories/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   // Get low stock products
   getLowStockProducts: () => {
     return apiRequest('/products/alerts/low-stock');
@@ -106,10 +144,18 @@ export const productAPI = {
   
   // Get pending products
   getPendingProducts: (params?: { 
+    search?: string;
+    status?: string;
+    locationType?: 'warehouse' | 'outlet';
+    locationId?: string;
     page?: number; 
     limit?: number;
   }) => {
     const queryParams = new URLSearchParams();
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.status && params.status !== 'all') queryParams.append('status', params.status);
+    if (params?.locationType) queryParams.append('locationType', params.locationType);
+    if (params?.locationId) queryParams.append('locationId', params.locationId);
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
 

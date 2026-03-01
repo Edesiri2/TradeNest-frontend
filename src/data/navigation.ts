@@ -9,7 +9,8 @@ import {
   Users,
   Truck,
   Shield,
-  Key
+  Key,
+  Building
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -93,24 +94,38 @@ export const navigationConfig: NavigationItem[] = [
     label: 'Warehouse',
     icon: Warehouse,
     roles: ['super_admin', 'admin', 'manager'],
-    permissions: ['warehouses.read'],
+    permissions: ['warehouses.read']
+  },
+  {
+    path: '/outlets',
+    label: 'Outlet Management',
+    icon: Building,
+    roles: ['super_admin', 'admin', 'manager', 'staff', 'viewer'],
+  },
+  {
+    path: '/transfers',
+    label: 'Transfers',
+    icon: Truck,
+    roles: ['super_admin', 'admin', 'manager'],
+    permissions: ['warehouses.update'],
     children: [
       {
-        path: '/warehouse/overview',
-        label: 'Overview',
-        icon: Warehouse,
-        roles: ['super_admin', 'admin', 'manager'],
-        permissions: ['warehouses.read'],
-      },
-      {
-        path: '/warehouse/transfers',
+        path: '/transfers/stock',
         label: 'Stock Transfer',
         icon: Truck,
         roles: ['super_admin', 'admin', 'manager'],
-        permissions: ['warehouses.update'],
+        permissions: ['warehouses.read']
       },
-    ],
+      {
+        path: '/transfers/staff',
+        label: 'Staff Transfer',
+        icon: Users,
+        roles: ['super_admin', 'admin', 'manager'],
+        permissions: ['warehouses.read']
+      },
+    ]
   },
+
   {
     path: '/reports',
     label: 'Reports',
@@ -162,6 +177,13 @@ export const navigationConfig: NavigationItem[] = [
         permissions: ['roles.read'],
       },
       {
+        path: '/settings/product-categories',
+        label: 'Product Category',
+        icon: Package,
+        roles: ['super_admin', 'admin', 'manager'],
+        permissions: ['products.read'],
+      },
+      {
         path: '/settings/permissions',
         label: 'Permissions',
         icon: Key,
@@ -173,7 +195,7 @@ export const navigationConfig: NavigationItem[] = [
         label: 'Profile Settings',
         icon: Users,
         roles: ['super_admin', 'admin', 'manager', 'staff', 'viewer'],
-      },
+      }
     ],
   },
 ];
