@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useUserStore } from '../../lib/store/useUserStore';
 import { useAuthStore } from '../../lib/store/useAuthStore';
+import { useRoleStore } from '../../lib/store/useRoleStore';
 import { usePermissions, PermissionGuard } from '../../lib/utils/permission';
 import { Search, Plus, Edit, Trash2, UserCheck, UserX, Filter } from 'lucide-react';
 import Button from '../../components/ui/Button';
@@ -18,6 +19,7 @@ interface OutletOption {
 
 const Users: React.FC = () => {
   const { users, pagination, fetchUsers, createUser, updateUser, deleteUser, setSelectedUser, selectedUser } = useUserStore();
+  const { roles, fetchRoles } = useRoleStore();
   const { token } = useAuthStore();
   const { canEditUsers, canDeleteUsers, user: currentUser } = usePermissions();
   
@@ -39,15 +41,15 @@ const Users: React.FC = () => {
     isActive: true
   });
 
-  const [roles] = useState<Array<{ id: string; name: string; description: string }>>([]);
+  const getRoleId = (user: any) => user?.role?.id || user?.role?._id || user?.roleId || '';
+  const getOutletId = (user: any) => user?.outletId || user?.outlet?.id || user?.outlet?._id || '';
 
   useEffect(() => {
     if (token) {
       fetchUsers();
-      // Fetch roles for dropdown (you'll need to implement this)
-      // fetchRoles();
+      fetchRoles();
     }
-  }, [token]);
+  }, [token, fetchUsers, fetchRoles]);
 
   useEffect(() => {
     const loadOutlets = async () => {
@@ -100,10 +102,15 @@ const Users: React.FC = () => {
     if (!selectedUser) return;
     
     try {
+      const roleId = getRoleId(selectedUser);
+      const selectedRole = roles.find((role) => role.id === roleId);
+      const isSuperAdmin = selectedRole?.name === 'super_admin';
+
       await updateUser(selectedUser.id, {
         firstName: selectedUser.firstName,
         lastName: selectedUser.lastName,
-        roleId: selectedUser.role.id,
+        roleId,
+        outletId: isSuperAdmin ? '' : getOutletId(selectedUser),
         isActive: selectedUser.isActive
       });
       setShowEditModal(false);
@@ -124,7 +131,17 @@ const Users: React.FC = () => {
   };
 
   const handleEditClick = (user: any) => {
-    setSelectedUser(user);
+    const normalizedRoleId = getRoleId(user);
+    const normalizedOutletId = getOutletId(user);
+
+    setSelectedUser({
+      ...user,
+      role: {
+        ...user.role,
+        id: normalizedRoleId
+      },
+      outletId: normalizedOutletId
+    });
     setShowEditModal(true);
   };
 
@@ -135,6 +152,10 @@ const Users: React.FC = () => {
 
   const selectedRoleName = roles.find((role) => role.id === newUser.roleId)?.name || '';
   const isSuperAdminRole = selectedRoleName === 'super_admin';
+  const selectedEditRoleId = selectedUser ? getRoleId(selectedUser) : '';
+  const selectedEditRole = roles.find((role) => role.id === selectedEditRoleId);
+  const isEditSuperAdminRole = selectedEditRole?.name === 'super_admin';
+  const selectedEditOutletId = selectedUser ? getOutletId(selectedUser) : '';
 
   const columns = [
     {
@@ -250,11 +271,11 @@ const Users: React.FC = () => {
               onChange={(e) => setRoleFilter(e.target.value)}
             >
               <option value="">All Roles</option>
-              <option value="super_admin">Super Admin</option>
-              <option value="admin">Admin</option>
-              <option value="manager">Manager</option>
-              <option value="staff">Staff</option>
-              <option value="viewer">Viewer</option>
+              {roles.map((role) => (
+                <option key={role.id} value={role.name}>
+                  {role.name}
+                </option>
+              ))}
             </select>
           </div>
           <div>
@@ -451,16 +472,50 @@ const Users: React.FC = () => {
               </label>
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={selectedUser.role.id}
-                onChange={(e) => setSelectedUser({ 
-                  ...selectedUser, 
-                  role: { ...selectedUser.role, id: e.target.value } 
-                })}
+                value={selectedEditRoleId}
+                onChange={(e) => {
+                  const nextRoleId = e.target.value;
+                  const nextRole = roles.find((role) => role.id === nextRoleId);
+                  const shouldClearOutlet = nextRole?.name === 'super_admin';
+
+                  setSelectedUser({
+                    ...selectedUser,
+                    role: {
+                      ...selectedUser.role,
+                      id: nextRoleId,
+                      name: nextRole?.name || selectedUser.role.name,
+                      description: nextRole?.description || selectedUser.role.description
+                    },
+                    outletId: shouldClearOutlet ? '' : getOutletId(selectedUser)
+                  });
+                }}
                 required
               >
+                <option value="">Select Role</option>
                 {roles.map(role => (
                   <option key={role.id} value={role.id}>
                     {role.name} - {role.description}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Outlet {isEditSuperAdminRole ? '(Not required for super admin)' : '*'}
+              </label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedEditOutletId}
+                onChange={(e) => setSelectedUser({ ...selectedUser, outletId: e.target.value })}
+                disabled={isEditSuperAdminRole}
+                required={!isEditSuperAdminRole}
+              >
+                <option value="">
+                  {isEditSuperAdminRole ? 'System generated user' : 'Select Outlet'}
+                </option>
+                {outlets.map(outlet => (
+                  <option key={outlet.id} value={outlet.id}>
+                    {outlet.name} ({outlet.code})
                   </option>
                 ))}
               </select>

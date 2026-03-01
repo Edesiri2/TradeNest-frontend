@@ -27,6 +27,18 @@ interface UserStore {
   setError: (error: string | null) => void;
 }
 
+const normalizeUser = (user: any) => ({
+  id: user._id || user.id,
+  ...user,
+  role: user.role
+    ? {
+        ...user.role,
+        id: user.role.id || user.role._id || user.roleId || ''
+      }
+    : { id: user.roleId || '', name: 'user', description: '' },
+  outletId: user.outletId || user.outlet?.id || user.outlet?._id || ''
+});
+
 export const useUserStore = create<UserStore>((set) => ({
   // Initial state
   users: [],
@@ -50,11 +62,7 @@ export const useUserStore = create<UserStore>((set) => ({
       const response = await userAPI.getUsers(token, params);
       
       // Transform API response
-      const users = response.data.map((user: any) => ({
-        id: user._id,
-        ...user,
-        role: user.role || { name: 'user', description: '' }
-      }));
+      const users = response.data.map((user: any) => normalizeUser(user));
 
       set({
         users,
@@ -92,11 +100,7 @@ export const useUserStore = create<UserStore>((set) => ({
       if (!token) throw new Error('No authentication token found');
       
       const response = await userAPI.getUser(token, id);
-      const user = {
-        id: response.data._id,
-        ...response.data,
-        role: response.data.role || { name: 'user', description: '' }
-      };
+      const user = normalizeUser(response.data);
       
       set({ loading: false });
       return user;
@@ -115,10 +119,7 @@ export const useUserStore = create<UserStore>((set) => ({
 
       const { outletId, ...userData } = data;
       const response = await userAPI.createUser(token, userData);
-      const newUser = {
-        id: response.data._id,
-        ...response.data
-      };
+      const newUser = normalizeUser(response.data);
 
       if (outletId) {
         await userAPI.assignOutlet(token, newUser.id, outletId);
@@ -151,10 +152,7 @@ export const useUserStore = create<UserStore>((set) => ({
         await userAPI.assignOutlet(token, id, outletId);
       }
 
-      const updatedUser = {
-        id: response.data._id,
-        ...response.data
-      };
+      const updatedUser = normalizeUser(response.data);
       
       // Update local state
       set(state => ({
