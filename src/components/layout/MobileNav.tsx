@@ -1,20 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  BarChart 
-} from 'lucide-react';
 import { useAuthStore } from '../../lib/store';
 import { getFlatNavigation } from '../../data/navigation';
 import { useMobile } from '../../hooks/use-mobile';
 import './layout.css';
 
 const MobileNav: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user, permissions } = useAuthStore();
   const isMobile = useMobile();
-  const navigationItems = getFlatNavigation(user?.role.name || 'cashier').slice(0, 4); // Limit to 4 items
+  const navigationItems = getFlatNavigation(user?.role.name || 'cashier', permissions).slice(0, 4); // Limit to 4 items
 
   if (!isMobile) {
     return null;

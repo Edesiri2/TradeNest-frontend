@@ -46,12 +46,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     const isActive = isItemActive(item.path, hasChildren);
     const isExpanded = expandedItems.has(item.path);
 
-    // Check permissions for this item
-    const canShowItem = !item.permissions || 
-      item.permissions.some((permission: string) => permissions.includes(permission));
-
-    if (!canShowItem) return null;
-
     // Updated sidebar-item styles with brand colors
     const sidebarItemClasses = `
       flex items-center px-4 py-3 text-sm font-medium transition-all duration-200

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { X, CreditCard, Smartphone, Banknote, SmartphoneCharging } from 'lucide-react';
 import { useSalesStore } from '../../lib/store/salesStore';
+import { useAuthStore } from '../../lib/store/useAuthStore';
 import { formatCurrency } from '../../lib/utils/utils';
 import { Button } from '../ui';
 import Receipt from './Receipt';
 import './sales.css';
+import { toast } from 'sonner';
 
 interface PaymentModalProps {
   totalAmount: number;
@@ -17,7 +19,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose, 
   onPaymentComplete 
 }) => {
-  const { cart, createSale, clearCart, getCartTotal } = useSalesStore();
+  const { user } = useAuthStore();
+  const { cart, createSale, clearCart, getCartTotal, selectedCustomer, loading } = useSalesStore();
   const [selectedMethod, setSelectedMethod] = useState<string>('');
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentSale, setCurrentSale] = useState<any>(null);
@@ -51,15 +54,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
  const handlePayment = async () => {
   if (!selectedMethod) {
-    alert('Please select a payment method');
+    toast.error('Please select a payment method');
+    return;
+  }
+
+  if (!user?.id || !user?.outletId) {
+    toast.error('User outlet information is missing. Please ensure you are logged in and have an assigned outlet.');
     return;
   }
 
   try {
-    // Prepare sale data according to your CreateSaleData interface
     const saleData = {
-      outletId: 'default-outlet', // TODO: Get from your app context
-      userId: 'current-user',     // TODO: Get from authentication
+      outletId: user.outletId,
+      userId: user.id,
       items: cart.map(item => ({
         productId: item.productId,
         productName: item.productName,
@@ -68,10 +75,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         total: item.total,
       })),
       totalAmount: totalAmount,
-      taxAmount: 0, // Calculate this based on your business logic
-      discountAmount: 0, // Calculate this based on your business logic
+      taxAmount: getCartTotal() * 0.075,
+      discountAmount: 0,
       paymentMethod: selectedMethod as 'cash' | 'card' | 'transfer' | 'mobile',
-      customerId: undefined, // You can add customer selection to your UI
+      customerId: selectedCustomer?.id,
       notes: `Payment completed via ${selectedMethod}`,
     };
 
@@ -82,7 +89,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     clearCart();
     
   } catch (error) {
-    alert('Payment failed. Please try again.');
+    toast.error('Payment failed. Please try again.');
     console.error('Payment error:', error);
   }
 };
@@ -186,9 +193,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <Button 
             variant="primary" 
             onClick={handlePayment}
-            disabled={!selectedMethod}
+            disabled={!selectedMethod || loading}
           >
-            Complete Payment
+            {loading ? 'Processing...' : 'Complete Payment'}
           </Button>
         </div>
       </div>

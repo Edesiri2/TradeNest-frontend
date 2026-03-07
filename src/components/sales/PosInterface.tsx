@@ -1,28 +1,60 @@
-import React, { useState } from 'react';
-import { Search, Package } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Search } from 'lucide-react';
 import {productStore as useInventoryStore } from '../../lib/store/productStore';
 import { useSalesStore } from '../../lib/store/salesStore';
+import { useAuthStore } from '../../lib/store/useAuthStore';
 import { formatCurrency } from '../../lib/utils/utils';
 import Cart from './Cart';
 import PaymentModal from './PaymentModal';
 import './sales.css';
 
-const PosInterface: React.FC = () => {
-  const { products } = useInventoryStore();
-  const { addToCart } = useSalesStore();
+interface PosInterfaceProps {
+  outletId?: string;
+}
+
+const PosInterface: React.FC<PosInterfaceProps> = ({ outletId }) => {
+  const { user } = useAuthStore();
+  const { products, fetchProducts, loading, pagination } = useInventoryStore();
+  const { addToCart, clearCart, getCartTotal } = useSalesStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const isSuperAdmin = user?.role?.name === 'super_admin';
+  const activeOutletId = isSuperAdmin ? outletId : user?.outletId;
+
+  useEffect(() => {
+    if (!activeOutletId && !isSuperAdmin) {
+      return;
+    }
+
+    void fetchProducts({
+      ...(activeOutletId
+        ? {
+            locationType: 'outlet' as const,
+            locationId: activeOutletId
+          }
+        : {}),
+      search: searchTerm || undefined,
+      page: currentPage,
+      limit: 10
+    });
+  }, [activeOutletId, currentPage, fetchProducts, isSuperAdmin, searchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, outletId]);
 
   // Get unique categories
-  const categories = ['all', ...new Set(products.map(p => p.category))];
+  const categories = useMemo(
+    () => ['all', ...new Set(products.map((product: any) => product.category).filter(Boolean))],
+    [products]
+  );
 
   // Filter products
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.sku.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    return matchesCategory;
   });
 
   const handleAddToCart = (product: any) => {
@@ -50,14 +82,27 @@ const PosInterface: React.FC = () => {
 
   const handleClearCart = () => {
     if (window.confirm('Are you sure you want to clear the cart?')) {
-      // This would be implemented in the store
-      console.log('Clear cart functionality');
+      clearCart();
     }
   };
 
   const handlePaymentComplete = () => {
     setShowPaymentModal(false);
-    // Clear cart or show success message
+    if (!activeOutletId && !isSuperAdmin) {
+      return;
+    }
+
+    void fetchProducts({
+      ...(activeOutletId
+        ? {
+            locationType: 'outlet' as const,
+            locationId: activeOutletId
+          }
+        : {}),
+      page: currentPage,
+      limit: 10,
+      search: searchTerm || undefined
+    });
   };
 
   return (
@@ -103,30 +148,64 @@ const PosInterface: React.FC = () => {
             </select>
           </div>
 
-          <div className="pos-products__grid">
-            {filteredProducts.map((product) => (
-              <div
-                key={product.id}
-                className={`pos-product-card ${
-                  product.currentStock === 0 ? 'pos-product-card--out-of-stock' : ''
-                }`}
-                onClick={() => handleAddToCart(product)}
-              >
-                <div className="pos-product-card__image">
-                  {getProductIcon(product.name)}
+          {!activeOutletId && !isSuperAdmin ? (
+            <div className="sales-empty">
+              <p className="sales-empty__text">Select an outlet to load products</p>
+            </div>
+          ) : (
+            <div className="pos-products__grid">
+              {loading && products.length === 0 ? (
+                <div className="sales-empty">
+                  <p className="sales-empty__text">Loading products...</p>
                 </div>
-                <h4 className="pos-product-card__name">{product.name}</h4>
-                <p className="pos-product-card__price">
-                  {formatCurrency(product.sellingPrice)}
-                </p>
-                <p className="pos-product-card__stock">
-                  {product.currentStock} in stock
-                </p>
-              </div>
-            ))}
-          </div>
+              ) : (
+                filteredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className={`pos-product-card ${
+                      product.currentStock === 0 ? 'pos-product-card--out-of-stock' : ''
+                    }`}
+                    onClick={() => handleAddToCart(product)}
+                  >
+                    <div className="pos-product-card__image">
+                      {getProductIcon(product.name)}
+                    </div>
+                    <h4 className="pos-product-card__name">{product.name}</h4>
+                    <p className="pos-product-card__price">
+                      {formatCurrency(product.sellingPrice)}
+                    </p>
+                    <p className="pos-product-card__stock">
+                      {product.currentStock} in stock
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
 
-          {filteredProducts.length === 0 && (
+          {((activeOutletId && !isSuperAdmin) || isSuperAdmin) && pagination.totalPages > 1 && (
+            <div className="pagination" style={{ padding: '0 1rem 1rem' }}>
+              <button
+                className="pagination-btn"
+                disabled={!pagination.hasPrev || loading}
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              >
+                Previous
+              </button>
+              <span className="pagination-info">
+                Page {pagination.currentPage} of {pagination.totalPages}
+              </span>
+              <button
+                className="pagination-btn"
+                disabled={!pagination.hasNext || loading}
+                onClick={() => setCurrentPage((page) => page + 1)}
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+          {((activeOutletId && !isSuperAdmin) || isSuperAdmin) && filteredProducts.length === 0 && !loading && (
             <div className="sales-empty">
               <div className="sales-empty__icon">🔍</div>
               <p className="sales-empty__text">No products found</p>
@@ -144,7 +223,7 @@ const PosInterface: React.FC = () => {
       {/* Payment Modal */}
       {showPaymentModal && (
         <PaymentModal
-          totalAmount={0} // This would come from cart total
+          totalAmount={getCartTotal() * 1.075}
           onClose={() => setShowPaymentModal(false)}
           onPaymentComplete={handlePaymentComplete}
         />

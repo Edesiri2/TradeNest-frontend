@@ -1,8 +1,10 @@
 /* StockTransferModule.css - Mobile First Design */
 :root {
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-  --primary-light: #dbeafe;
+  --primary: #4f46e5;
+  --primary-dark: #4338ca;
+  --primary-light: #e0e7ff;
+  --primary-gradient: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+  --primary-gradient-hover: linear-gradient(90deg, #4338ca 0%, #6d28d9 100%);
   --secondary: #8b5cf6;
   --success: #10b981;
   --warning: #f59e0b;
@@ -69,7 +71,7 @@
 
 /* Buttons */
 .btn-primary {
-  background: var(--primary);
+  background: var(--primary-gradient);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -85,7 +87,7 @@
 }
 
 .btn-primary:hover {
-  background: var(--primary-dark);
+  background: var(--primary-gradient-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
@@ -103,7 +105,7 @@
 }
 
 .btn-outline:hover {
-  background: var(--primary-light);
+  background: rgba(79, 70, 229, 0.06);
 }
 
 .btn-remove {

@@ -11,7 +11,7 @@ import { getPermissionDisplayName, groupPermissionsByModule } from '../../lib/ut
 import { formatDate } from '../../lib/utils/utils';
 
 const Roles: React.FC = () => {
-  const { roles, permissions, permissionGroups, loading, error, fetchRoles, fetchPermissions, createRole, updateRole, deleteRole, setSelectedRole, selectedRole } = useRoleStore();
+  const { roles, permissions, permissionGroups, loading, error, fetchRoles, fetchPermissions, fetchRole, createRole, updateRole, deleteRole, setSelectedRole, selectedRole } = useRoleStore();
   const { token } = useAuthStore();
   const { canCreateRoles, canEditRoles, canDeleteRoles } = usePermissions();
   
@@ -57,7 +57,10 @@ const Roles: React.FC = () => {
         description: selectedRole.description,
         permissions: selectedRole.permissions.map(p => p.id)
       });
+      await fetchRoles();
       setShowEditModal(false);
+      setShowPermissionsModal(false);
+      setSelectedRole(null);
     } catch (error) {
       console.error('Failed to update role:', error);
     }
@@ -74,9 +77,15 @@ const Roles: React.FC = () => {
     }
   };
 
-  const handleEditClick = (role: any) => {
-    setSelectedRole(role);
-    setShowEditModal(true);
+  const handleEditClick = async (role: any) => {
+    try {
+      await fetchRole(role.id);
+      setShowEditModal(true);
+    } catch (error) {
+      console.error('Failed to load role details:', error);
+      setSelectedRole(role);
+      setShowEditModal(true);
+    }
   };
 
   const handleDeleteClick = (role: any) => {
@@ -84,9 +93,15 @@ const Roles: React.FC = () => {
     setShowDeleteModal(true);
   };
 
-  const handlePermissionsClick = (role: any) => {
-    setSelectedRole(role);
-    setShowPermissionsModal(true);
+  const handlePermissionsClick = async (role: any) => {
+    try {
+      await fetchRole(role.id);
+      setShowPermissionsModal(true);
+    } catch (error) {
+      console.error('Failed to load role permissions:', error);
+      setSelectedRole(role);
+      setShowPermissionsModal(true);
+    }
   };
 
   const togglePermission = (permissionId: string) => {
@@ -425,7 +440,11 @@ const Roles: React.FC = () => {
           <Button variant="outline" onClick={() => setShowPermissionsModal(false)}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleUpdateRole}>
+          <Button
+            variant="primary"
+            onClick={handleUpdateRole}
+            disabled={selectedRole?.name === 'super_admin'}
+          >
             Save Permissions
           </Button>
         </div>

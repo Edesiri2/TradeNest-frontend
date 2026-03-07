@@ -13,11 +13,12 @@ import VerifyEmail from './auth/VerifyEmail';
 import ForgotPassword from './auth/ForgotPassword';
 import ResetPassword from './auth/ResetPassword';
 import WarehouseModule from './components/warehouse/warehouse';
-import StockTransferModule from './components/warehouse/stock-transfer';
+import StockTransferModule from './components/transfers/stock-transfer/stock-transfer';
 import OutletModule from './components/outlet/outlet';
 import Users from './components/settings/Users';
 import Roles from './components/settings/Roles';
 import ProductCategories from './components/settings/ProductCategories';
+import Profile from './components/settings/Profile';
 import { useAuthStore } from './lib/store/useAuthStore';
 
 // Protected route component
@@ -77,6 +78,7 @@ function App() {
                 <Route path="users" element={<Users />} />
                 <Route path="roles" element={<Roles />} />
                 <Route path="product-categories" element={<ProductCategories />} />
+                <Route path="profile" element={<Profile />} />
               </Route>
             </Route>
             

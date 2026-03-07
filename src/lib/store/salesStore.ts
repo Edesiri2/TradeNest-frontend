@@ -8,7 +8,8 @@ import type {
   PaymentInfo,
   SalesFilters,
   CreateSaleData,
-  CreateCustomerData
+  CreateCustomerData,
+  SalesAnalyticsData
 } from '../../types/sales';
 
 interface SalesStoreState {
@@ -17,6 +18,7 @@ interface SalesStoreState {
   customers: Customer[];
   cart: CartItem[];
   currentSale: Sale | null;
+  analytics: SalesAnalyticsData | null;
   
   // UI State
   loading: boolean;
@@ -48,6 +50,7 @@ interface SalesStoreActions {
   fetchSaleById: (id: string) => Promise<Sale | null>;
   createSale: (saleData: CreateSaleData) => Promise<Sale>;
   refundSale: (id: string, reason?: string) => Promise<void>;
+  fetchSalesAnalytics: (params?: { period?: string; outletId?: string }) => Promise<void>;
   
   // Customer operations
   fetchCustomers: () => Promise<void>;
@@ -79,6 +82,7 @@ export const useSalesStore = create<SalesStore>((set, get) => ({
   customers: [],
   cart: [],
   currentSale: null,
+  analytics: null,
   loading: false,
   error: null,
   selectedCustomer: null,
@@ -89,6 +93,19 @@ export const useSalesStore = create<SalesStore>((set, get) => ({
     totalSales: 0,
     hasNext: false,
     hasPrev: false
+  },
+
+  fetchSalesAnalytics: async (params = {}) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await salesAPI.getSalesAnalytics(params);
+      set({
+        analytics: response.data || null,
+        loading: false
+      });
+    } catch (error: any) {
+      set({ error: error.message, loading: false });
+    }
   },
   summary: {
     todaySales: 0,
@@ -103,6 +120,11 @@ export const useSalesStore = create<SalesStore>((set, get) => ({
     try {
       // Convert Date objects to ISO strings for the API
       const apiParams: any = { ...filters };
+
+      if (filters.outletId) {
+        apiParams.outlet = filters.outletId;
+        delete apiParams.outletId;
+      }
       
       if (filters.startDate) {
         apiParams.startDate = filters.startDate.toISOString();
@@ -144,7 +166,7 @@ export const useSalesStore = create<SalesStore>((set, get) => ({
         pagination: response.pagination || {
           currentPage: 1,
           totalPages: 1,
-          totalSales: sales.length,
+          totalSales: response.pagination?.totalSales || response.pagination?.totalItems || sales.length,
           hasNext: false,
           hasPrev: false
         },

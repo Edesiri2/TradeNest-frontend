@@ -3,4 +3,5 @@ export { default as PosInterface } from './PosInterface';
 export { default as Cart } from './Cart';
 export { default as Receipt } from './Receipt';
 export { default as SalesHistory } from './SalesHistory';
+export { default as SalesAnalytics } from './SalesAnalytics';
 // export { default as PaymentModal } from './PaymentModal';

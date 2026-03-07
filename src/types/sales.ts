@@ -133,11 +133,15 @@ export interface CreateCustomerData {
 }
 
 export interface SalesFilters {
+  search?: string;
   startDate?: Date;
   endDate?: Date;
   outletId?: string;
   paymentMethod?: string;
+  paymentStatus?: string;
   customerId?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface SalesSummary {
@@ -151,6 +155,31 @@ export interface SalesSummary {
     quantitySold: number;
     revenue: number;
   }>;
+}
+
+export interface SalesAnalyticsData {
+  salesByPayment: Array<{
+    _id: string;
+    totalAmount: number;
+    count: number;
+  }>;
+  dailySales: Array<{
+    _id: string;
+    totalAmount: number;
+    count: number;
+  }>;
+  topProducts: Array<{
+    _id: string;
+    productName: string;
+    totalQuantity: number;
+    totalRevenue: number;
+  }>;
+  salesByHour: Array<{
+    _id: string;
+    totalAmount: number;
+    count: number;
+  }>;
+  period: string;
 }
 
 // Hook return type

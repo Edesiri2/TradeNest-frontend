@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Plus, Edit, Trash2, Package } from 'lucide-react';
 import { productStore } from '../../lib/store/productStore';
+import { useAuthStore } from '../../lib/store/useAuthStore';
 import { formatCurrency } from '../../lib/utils/utils';
 import { Button } from '../ui';
 import './inventory.css';
@@ -18,6 +19,7 @@ const ProductList: React.FC<ProductListProps> = ({
   locationTypeFilter,
   locationIdFilter
 }) => {
+  const { user } = useAuthStore();
   const {
     products,
     categories,
@@ -34,6 +36,10 @@ const ProductList: React.FC<ProductListProps> = ({
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'in-stock' | 'out-of-stock'>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const userLocationId = user?.outletId || user?.outlet?.id || '';
+  const isSuperAdmin = user?.role?.name === 'super_admin';
+  const enforcedLocationId = !isSuperAdmin && userLocationId ? userLocationId : locationIdFilter;
+  const enforcedLocationType = !isSuperAdmin && userLocationId ? 'outlet' : locationTypeFilter;
 
   const categoryOptions = useMemo(
     () =>
@@ -48,8 +54,8 @@ const ProductList: React.FC<ProductListProps> = ({
     if (searchTerm) params.search = searchTerm;
     if (categoryFilter !== 'all') params.category = categoryFilter;
     if (statusFilter !== 'all') params.status = statusFilter;
-    if (locationTypeFilter !== 'all') params.locationType = locationTypeFilter;
-    if (locationIdFilter !== 'all') params.locationId = locationIdFilter;
+    if (enforcedLocationType !== 'all') params.locationType = enforcedLocationType;
+    if (enforcedLocationId !== 'all') params.locationId = enforcedLocationId;
     return params;
   };
 
@@ -59,11 +65,11 @@ const ProductList: React.FC<ProductListProps> = ({
 
   useEffect(() => {
     fetchProducts(buildFetchParams(currentPage));
-  }, [fetchProducts, currentPage, searchTerm, categoryFilter, statusFilter, locationTypeFilter, locationIdFilter]);
+  }, [fetchProducts, currentPage, searchTerm, categoryFilter, statusFilter, enforcedLocationType, enforcedLocationId]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, categoryFilter, statusFilter, locationTypeFilter, locationIdFilter]);
+  }, [searchTerm, categoryFilter, statusFilter, enforcedLocationType, enforcedLocationId]);
 
   const handleDelete = async (productId: string, productName: string) => {
     if (window.confirm(`Are you sure you want to delete "${productName}"?`)) {
@@ -235,16 +241,16 @@ const ProductList: React.FC<ProductListProps> = ({
               {searchTerm ||
               categoryFilter !== 'all' ||
               statusFilter !== 'all' ||
-              locationTypeFilter !== 'all' ||
-              locationIdFilter !== 'all'
+              enforcedLocationType !== 'all' ||
+              enforcedLocationId !== 'all'
                 ? 'Try adjusting your search or filter criteria'
                 : 'Get started by adding your first product'}
             </p>
             {!searchTerm &&
               categoryFilter === 'all' &&
               statusFilter === 'all' &&
-              locationTypeFilter === 'all' &&
-              locationIdFilter === 'all' && (
+              enforcedLocationType === 'all' &&
+              enforcedLocationId === 'all' && (
                 <Button onClick={onAddProduct} icon={Plus} variant="primary">
                   Add First Product
                 </Button>

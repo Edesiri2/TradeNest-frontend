@@ -24,6 +24,17 @@ interface RoleStore {
   groupPermissionsByModule: (permissions: Permission[]) => PermissionGroup;
 }
 
+const normalizePermission = (permission: any) => ({
+  id: permission.id || permission._id,
+  ...permission
+});
+
+const normalizeRole = (role: any) => ({
+  id: role._id || role.id,
+  ...role,
+  permissions: (role.permissions || []).map((permission: any) => normalizePermission(permission))
+});
+
 export const useRoleStore = create<RoleStore>((set, get) => ({
   // Initial state
   roles: [],
@@ -43,11 +54,7 @@ export const useRoleStore = create<RoleStore>((set, get) => ({
       const response = await roleAPI.getRoles(token);
       
       // Transform API response
-      const roles = response.data.map((role: any) => ({
-        id: role._id,
-        ...role,
-        permissions: role.permissions || []
-      }));
+      const roles = response.data.map((role: any) => normalizeRole(role));
 
       set({
         roles,
@@ -68,10 +75,7 @@ export const useRoleStore = create<RoleStore>((set, get) => ({
       const response = await roleAPI.getPermissions(token);
       
       // Transform API response
-      const permissions = response.data.map((permission: any) => ({
-        id: permission._id,
-        ...permission
-      }));
+      const permissions = response.data.map((permission: any) => normalizePermission(permission));
       
       // Group permissions by module
       const permissionGroups = get().groupPermissionsByModule(permissions);
@@ -94,11 +98,7 @@ export const useRoleStore = create<RoleStore>((set, get) => ({
       if (!token) throw new Error('No authentication token found');
       
       const response = await roleAPI.getRole(token, id);
-      const role = {
-        id: response.data._id,
-        ...response.data,
-        permissions: response.data.permissions || []
-      };
+      const role = normalizeRole(response.data);
       
       set({ loading: false, selectedRole: role });
       return role;
@@ -116,10 +116,7 @@ export const useRoleStore = create<RoleStore>((set, get) => ({
       if (!token) throw new Error('No authentication token found');
       
       const response = await roleAPI.createRole(token, data);
-      const newRole = {
-        id: response.data._id,
-        ...response.data
-      };
+      const newRole = normalizeRole(response.data);
       
       // Add to local state
       set(state => ({
@@ -142,10 +139,7 @@ export const useRoleStore = create<RoleStore>((set, get) => ({
       if (!token) throw new Error('No authentication token found');
       
       const response = await roleAPI.updateRole(token, id, data);
-      const updatedRole = {
-        id: response.data._id,
-        ...response.data
-      };
+      const updatedRole = normalizeRole(response.data);
       
       // Update local state
       set(state => ({

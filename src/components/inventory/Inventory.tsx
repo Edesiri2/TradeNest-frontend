@@ -3,7 +3,6 @@ import { List, Plus, Clock } from 'lucide-react';
 import { Button } from '../ui';
 import ProductList from './ProductList';
 import ProductForm from './ProductForm';
-import StockTransfer from './StockTransfer';
 import PendingProducts from './PendingProducts';
 import { locationAPI } from '../../lib/api/locationApi';
 import { useAuthStore } from '../../lib/store/useAuthStore';
@@ -19,17 +18,19 @@ interface LocationOption {
 
 const Inventory: React.FC = () => {
   const { user } = useAuthStore();
+  const userOutletId = user?.outletId || user?.outlet?.id || '';
+  const isSuperAdmin = user?.role?.name === 'super_admin';
+  const isOutletScopedUser = Boolean(userOutletId) && !isSuperAdmin;
   const [currentView, setCurrentView] = useState<InventoryView>('list');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [locationTypeFilter, setLocationTypeFilter] = useState<'all' | 'warehouse' | 'outlet'>('outlet');
-  const [locationIdFilter, setLocationIdFilter] = useState('all');
+  const [locationTypeFilter, setLocationTypeFilter] = useState<'all' | 'warehouse' | 'outlet'>(
+    isOutletScopedUser ? 'outlet' : 'outlet'
+  );
+  const [locationIdFilter, setLocationIdFilter] = useState(isOutletScopedUser ? userOutletId : 'all');
   const [warehouses, setWarehouses] = useState<LocationOption[]>([]);
   const [outlets, setOutlets] = useState<LocationOption[]>([]);
 
   const selectedLocations = locationTypeFilter === 'warehouse' ? warehouses : outlets;
-  const userOutletId = user?.outletId || user?.outlet?.id || '';
-  const isSuperAdmin = user?.role?.name === 'super_admin';
-  const isOutletScopedUser = Boolean(userOutletId) && !isSuperAdmin;
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -70,7 +71,9 @@ const Inventory: React.FC = () => {
     if (isOutletScopedUser) {
       setLocationTypeFilter('outlet');
       setLocationIdFilter(userOutletId);
+      return;
     }
+    setLocationIdFilter('all');
   }, [isOutletScopedUser, userOutletId]);
 
   useEffect(() => {
@@ -121,8 +124,6 @@ const Inventory: React.FC = () => {
             onCancel={handleCancel}
           />
         );
-      case 'transfer':
-        return <StockTransfer />;
       case 'pending':
         return <PendingProducts />;
       default:

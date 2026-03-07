@@ -9,7 +9,6 @@ import {
   Users,
   Truck,
   Shield,
-  Key,
   Building
 } from 'lucide-react';
 
@@ -43,51 +42,28 @@ export const navigationConfig: NavigationItem[] = [
         roles: ['super_admin', 'admin', 'manager'],
         permissions: ['products.read'],
       },
-      {
-        path: '/inventory/pending-approval',
-        label: 'Pending Approval',
-        icon: Shield,
-        roles: ['super_admin', 'admin'],
-        permissions: ['products.approve'],
-      },
-      {
-        path: '/inventory/low-stock',
-        label: 'Low Stock',
-        icon: Package,
-        roles: ['super_admin', 'admin', 'manager'],
-        permissions: ['products.read'],
-      },
+      // {
+      //   path: '/inventory/pending-approval',
+      //   label: 'Pending Approval',
+      //   icon: Shield,
+      //   roles: ['super_admin', 'admin'],
+      //   permissions: ['products.approve'],
+      // },
+      // {
+      //   path: '/inventory/low-stock',
+      //   label: 'Low Stock',
+      //   icon: Package,
+      //   roles: ['super_admin', 'admin', 'manager'],
+      //   permissions: ['products.read'],
+      // },
     ],
   },
   {
-    path: '/sales',
+    path: '/sales/pos',
     label: 'Sales',
     icon: ShoppingCart,
     roles: ['super_admin', 'admin', 'manager', 'staff'],
-    permissions: ['sales.read'],
-    children: [
-      {
-        path: '/sales/pos',
-        label: 'POS',
-        icon: ShoppingCart,
-        roles: ['super_admin', 'admin', 'manager', 'staff'],
-        permissions: ['sales.create'],
-      },
-      {
-        path: '/sales/history',
-        label: 'Sales History',
-        icon: BarChart,
-        roles: ['super_admin', 'admin', 'manager'],
-        permissions: ['sales.read'],
-      },
-      {
-        path: '/sales/customers',
-        label: 'Customers',
-        icon: Users,
-        roles: ['super_admin', 'admin', 'manager'],
-        permissions: ['sales.read'],
-      },
-    ],
+    permissions: ['sales.read']
   },
   {
     path: '/warehouse',
@@ -115,14 +91,7 @@ export const navigationConfig: NavigationItem[] = [
         icon: Truck,
         roles: ['super_admin', 'admin', 'manager'],
         permissions: ['warehouses.read']
-      },
-      {
-        path: '/transfers/staff',
-        label: 'Staff Transfer',
-        icon: Users,
-        roles: ['super_admin', 'admin', 'manager'],
-        permissions: ['warehouses.read']
-      },
+      }
     ]
   },
 
@@ -184,13 +153,6 @@ export const navigationConfig: NavigationItem[] = [
         permissions: ['products.read'],
       },
       {
-        path: '/settings/permissions',
-        label: 'Permissions',
-        icon: Key,
-        roles: ['super_admin', 'admin'],
-        permissions: ['permissions.read'],
-      },
-      {
         path: '/settings/profile',
         label: 'Profile Settings',
         icon: Users,
@@ -200,24 +162,45 @@ export const navigationConfig: NavigationItem[] = [
   },
 ];
 
+const hasMatchingPermission = (
+  itemPermissions: string[] | undefined,
+  permissions: string[]
+) => {
+  if (!itemPermissions || itemPermissions.length === 0) return false;
+  return itemPermissions.some(permission => permissions.includes(permission));
+};
+
+const canAccessItem = (
+  item: NavigationItem,
+  role: string,
+  permissions: string[]
+) => {
+  const roleMatches = item.roles.includes(role as any);
+  const permissionMatches = hasMatchingPermission(item.permissions, permissions);
+
+  return roleMatches || permissionMatches;
+};
+
 // Helper function to get navigation items based on user role and permissions
 export const getNavigationItems = (
   role: string, 
   permissions: string[] = []
 ): NavigationItem[] => {
-  const hasPermission = (itemPermissions?: string[]) => {
-    if (!itemPermissions || itemPermissions.length === 0) return true;
-    return itemPermissions.some(permission => permissions.includes(permission));
-  };
+  return navigationConfig.reduce<NavigationItem[]>((items, item) => {
+      const children = item.children?.filter(child => canAccessItem(child, role, permissions));
+      const shouldIncludeItem = canAccessItem(item, role, permissions) || Boolean(children?.length);
 
-  return navigationConfig
-    .filter(item => item.roles.includes(role as any) && hasPermission(item.permissions))
-    .map(item => ({
-      ...item,
-      children: item.children?.filter(
-        child => child.roles.includes(role as any) && hasPermission(child.permissions)
-      )
-    }));
+      if (!shouldIncludeItem) {
+        return items;
+      }
+
+      items.push({
+        ...item,
+        children
+      });
+
+      return items;
+    }, []);
 };
 
 // Flat navigation for mobile (no nested children)
@@ -226,18 +209,13 @@ export const getFlatNavigation = (
   permissions: string[] = []
 ): NavigationItem[] => {
   const items: NavigationItem[] = [];
-  
-  const hasPermission = (itemPermissions?: string[]) => {
-    if (!itemPermissions || itemPermissions.length === 0) return true;
-    return itemPermissions.some(permission => permissions.includes(permission));
-  };
-  
+
   navigationConfig.forEach(item => {
-    if (item.roles.includes(role as any) && hasPermission(item.permissions)) {
+    if (canAccessItem(item, role, permissions)) {
       items.push(item);
       if (item.children) {
         item.children.forEach(child => {
-          if (child.roles.includes(role as any) && hasPermission(child.permissions)) {
+          if (canAccessItem(child, role, permissions)) {
             items.push(child);
           }
         });
@@ -268,12 +246,6 @@ export const canAccessRoute = (
 ): boolean => {
   const item = findNavigationItem(path);
   if (!item) return false;
-  
-  if (!item.roles.includes(role as any)) return false;
-  
-  if (item.permissions && item.permissions.length > 0) {
-    return item.permissions.some(permission => permissions.includes(permission));
-  }
-  
-  return true;
+
+  return canAccessItem(item, role, permissions);
 };

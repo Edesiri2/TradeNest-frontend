@@ -1,12 +1,16 @@
+import { useAuthStore } from '../store/useAuthStore';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 // Generic API request function
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
+  const token = useAuthStore.getState().token;
   
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
     ...options,
@@ -57,10 +61,10 @@ export const salesAPI = {
   },
 
   // Get sales analytics
-  getSalesAnalytics: (params?: { period?: string; outlet?: string }) => {
+  getSalesAnalytics: (params?: { period?: string; outletId?: string }) => {
     const queryParams = new URLSearchParams();
     if (params?.period) queryParams.append('period', params.period);
-    if (params?.outlet) queryParams.append('outlet', params.outlet);
+    if (params?.outletId) queryParams.append('outletId', params.outletId);
 
     const queryString = queryParams.toString();
     const endpoint = `/sales/analytics${queryString ? `?${queryString}` : ''}`;

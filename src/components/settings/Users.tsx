@@ -43,13 +43,23 @@ const Users: React.FC = () => {
 
   const getRoleId = (user: any) => user?.role?.id || user?.role?._id || user?.roleId || '';
   const getOutletId = (user: any) => user?.outletId || user?.outlet?.id || user?.outlet?._id || '';
+  const getUserQueryParams = (page = pagination.currentPage || 1) => ({
+    search,
+    role: roleFilter || undefined,
+    isActive: statusFilter || undefined,
+    page
+  });
+
+  const refreshUsers = async (page = pagination.currentPage || 1) => {
+    await fetchUsers(getUserQueryParams(page));
+  };
 
   useEffect(() => {
     if (token) {
-      fetchUsers();
+      refreshUsers(1);
       fetchRoles();
     }
-  }, [token, fetchUsers, fetchRoles]);
+  }, [token, fetchRoles]);
 
   useEffect(() => {
     const loadOutlets = async () => {
@@ -72,17 +82,13 @@ const Users: React.FC = () => {
   }, []);
 
   const handleSearch = () => {
-    fetchUsers({
-      search,
-      role: roleFilter || undefined,
-      isActive: statusFilter || undefined,
-      page: 1
-    });
+    refreshUsers(1);
   };
 
   const handleCreateUser = async () => {
     try {
       await createUser(newUser);
+      await refreshUsers();
       setShowCreateModal(false);
       setNewUser({
         email: '',
@@ -113,6 +119,7 @@ const Users: React.FC = () => {
         outletId: isSuperAdmin ? '' : getOutletId(selectedUser),
         isActive: selectedUser.isActive
       });
+      await refreshUsers();
       setShowEditModal(false);
     } catch (error) {
       console.error('Failed to update user:', error);
@@ -124,6 +131,7 @@ const Users: React.FC = () => {
     
     try {
       await deleteUser(selectedUser.id);
+      await refreshUsers();
       setShowDeleteModal(false);
     } catch (error) {
       console.error('Failed to delete user:', error);
@@ -323,14 +331,14 @@ const Users: React.FC = () => {
             <Button
               variant="outline"
               disabled={pagination.currentPage === 1}
-              onClick={() => fetchUsers({ page: pagination.currentPage - 1 })}
+              onClick={() => refreshUsers(pagination.currentPage - 1)}
             >
               Previous
             </Button>
             <Button
               variant="outline"
               disabled={pagination.currentPage === pagination.totalPages}
-              onClick={() => fetchUsers({ page: pagination.currentPage + 1 })}
+              onClick={() => refreshUsers(pagination.currentPage + 1)}
             >
               Next
             </Button>

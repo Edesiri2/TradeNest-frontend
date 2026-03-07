@@ -21,7 +21,7 @@ const Cart: React.FC<CartProps> = ({ onCheckout, onClearCart }) => {
   };
 
   const subtotal = getCartTotal();
-  const tax = subtotal * 0.075; // 7.5% VAT
+  const tax = subtotal * 0.075;
   const total = subtotal + tax;
 
   if (cart.length === 0) {
@@ -64,7 +64,7 @@ const Cart: React.FC<CartProps> = ({ onCheckout, onClearCart }) => {
                 {formatCurrency(item.unitPrice)} each
               </p>
             </div>
-            
+
             <div className="pos-cart__item-quantity">
               <button
                 onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
@@ -75,7 +75,7 @@ const Cart: React.FC<CartProps> = ({ onCheckout, onClearCart }) => {
               <input
                 type="number"
                 value={item.quantity}
-                onChange={(e) => handleQuantityChange(item.productId, parseInt(e.target.value) || 1)}
+                onChange={(e) => handleQuantityChange(item.productId, parseInt(e.target.value, 10) || 1)}
                 className="pos-cart__quantity-input"
                 min="1"
                 max={item.stock}
@@ -87,11 +87,11 @@ const Cart: React.FC<CartProps> = ({ onCheckout, onClearCart }) => {
                 <Plus size={14} />
               </button>
             </div>
-            
+
             <div className="pos-cart__item-total">
               {formatCurrency(item.total)}
             </div>
-            
+
             <button
               onClick={() => removeFromCart(item.productId)}
               className="pos-cart__remove-btn"
@@ -124,7 +124,7 @@ const Cart: React.FC<CartProps> = ({ onCheckout, onClearCart }) => {
             onClick={onCheckout}
             className="pos-cart__action-btn pos-cart__action-btn--primary"
           >
-            💳 Checkout ({formatCurrency(total)})
+            💳 Checkout <span className="pos-cart__checkout-amount">{formatCurrency(total)}</span>
           </button>
           <button
             onClick={onClearCart}
