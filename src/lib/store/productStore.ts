@@ -26,6 +26,8 @@ interface Product {
   approvedBy?: string;
   approvedAt?: string;
   rejectionReason?: string;
+  isVatable?: boolean;
+  isVatInclusive?: boolean;
 }
 
 interface InventoryState {

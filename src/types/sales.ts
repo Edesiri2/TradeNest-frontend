@@ -40,6 +40,9 @@ export interface CartItem {
   unitPrice: number;
   total: number;
   stock: number;
+  isVatable?: boolean;
+  isVatInclusive?: boolean;
+  sku?: string;
 }
 
 export interface PaymentInfo {
@@ -115,12 +118,21 @@ export interface SalesActions {
 export interface CreateSaleData {
   outletId: string;
   userId: string;
-  items: Omit<SaleItem, 'id'>[];
+  items: Array<Omit<SaleItem, 'id'> & {
+    isVatable?: boolean;
+    isVatInclusive?: boolean;
+    vatAmount?: number;
+    subtotal?: number;
+  }>;
   totalAmount: number;
   taxAmount: number;
   discountAmount: number;
   paymentMethod: 'cash' | 'card' | 'transfer' | 'mobile';
   customerId?: string;
+  loyaltyNumber?: string;
+  loyaltyBonusAmount?: number;
+  vatableAmount?: number;
+  nonVatableAmount?: number;
   notes?: string;
 }
 

@@ -17,9 +17,11 @@ import StockTransferModule from './components/transfers/stock-transfer/stock-tra
 import OutletModule from './components/outlet/outlet';
 import Users from './components/settings/Users';
 import Roles from './components/settings/Roles';
-import ProductCategories from './components/settings/ProductCategories';
+import CategorySettings from './components/settings/CategorySettings';
 import Profile from './components/settings/Profile';
+import Configuration from './components/settings/Configuration';
 import { useAuthStore } from './lib/store/useAuthStore';
+import { useSettingsStore } from './lib/store/useSettingsStore';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -49,11 +51,18 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 function App() {
   const { checkAuth } = useAuthStore();
+  const { fetchSettings, settings } = useSettingsStore();
 
   // Check auth on app load
   useEffect(() => {
     checkAuth();
+    void fetchSettings();
   }, []);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--brand-primary-from', settings.brand.primaryFrom);
+    document.documentElement.style.setProperty('--brand-primary-to', settings.brand.primaryTo);
+  }, [settings.brand.primaryFrom, settings.brand.primaryTo]);
   
   return (
     <>
@@ -70,6 +79,10 @@ function App() {
               <Route path="sales/pos" element={<Sales />} />
               <Route path="outlets" element={<OutletModule />} />
               <Route path="reports/sales" element={<Reports />} />
+              <Route path="reports/inventory" element={<Reports />} />
+              <Route path="reports/profit-loss" element={<Reports />} />
+              <Route path="reports/customers" element={<Reports />} />
+              <Route path="reports/operational-costs" element={<Reports />} />
               <Route path="warehouse" element={<WarehouseModule />} />
               <Route path="transfers/stock" element={<StockTransferModule />} />
 
@@ -77,8 +90,9 @@ function App() {
               <Route path="settings">
                 <Route path="users" element={<Users />} />
                 <Route path="roles" element={<Roles />} />
-                <Route path="product-categories" element={<ProductCategories />} />
+                <Route path="product-categories" element={<CategorySettings />} />
                 <Route path="profile" element={<Profile />} />
+                <Route path="configuration" element={<Configuration />} />
               </Route>
             </Route>
             

@@ -9,7 +9,8 @@ import {
   Users,
   Truck,
   Shield,
-  Building
+  Building,
+  DollarSign
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -42,20 +43,6 @@ export const navigationConfig: NavigationItem[] = [
         roles: ['super_admin', 'admin', 'manager'],
         permissions: ['products.read'],
       },
-      // {
-      //   path: '/inventory/pending-approval',
-      //   label: 'Pending Approval',
-      //   icon: Shield,
-      //   roles: ['super_admin', 'admin'],
-      //   permissions: ['products.approve'],
-      // },
-      // {
-      //   path: '/inventory/low-stock',
-      //   label: 'Low Stock',
-      //   icon: Package,
-      //   roles: ['super_admin', 'admin', 'manager'],
-      //   permissions: ['products.read'],
-      // },
     ],
   },
   {
@@ -123,6 +110,20 @@ export const navigationConfig: NavigationItem[] = [
         roles: ['super_admin', 'admin', 'manager'],
         permissions: ['sales.read'],
       },
+      {
+        path: '/reports/customers',
+        label: 'Customer Analytics',
+        icon: Users,
+        roles: ['super_admin', 'admin', 'manager'],
+        permissions: ['sales.read'],
+      },
+      {
+        path: '/reports/operational-costs',
+        label: 'Operational Costs',
+        icon: DollarSign,
+        roles: ['super_admin', 'admin', 'manager'],
+        permissions: ['operational_costs.read'],
+      },
     ],
   },
   {
@@ -147,7 +148,7 @@ export const navigationConfig: NavigationItem[] = [
       },
       {
         path: '/settings/product-categories',
-        label: 'Product Category',
+        label: 'Categories',
         icon: Package,
         roles: ['super_admin', 'admin', 'manager'],
         permissions: ['products.read'],
@@ -157,6 +158,12 @@ export const navigationConfig: NavigationItem[] = [
         label: 'Profile Settings',
         icon: Users,
         roles: ['super_admin', 'admin', 'manager', 'staff', 'viewer'],
+      },
+      {
+        path: '/settings/configuration',
+        label: 'Configuration',
+        icon: Settings,
+        roles: ['super_admin', 'admin', 'manager'],
       }
     ],
   },

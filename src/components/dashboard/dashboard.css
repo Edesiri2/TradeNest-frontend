@@ -440,6 +440,7 @@
   border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
   padding: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .quick-actions__title {

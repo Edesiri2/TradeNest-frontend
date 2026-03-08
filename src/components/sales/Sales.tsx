@@ -3,6 +3,7 @@ import { BarChart, History, ShoppingCart, Users } from 'lucide-react';
 import { locationAPI } from '../../lib/api/locationApi';
 import { useAuthStore } from '../../lib/store/useAuthStore';
 import { Button } from '../ui';
+import CustomerManagement from './CustomerManagement';
 import PosInterface from './PosInterface';
 import SalesAnalytics from './SalesAnalytics';
 import SalesHistory from './SalesHistory';
@@ -46,7 +47,6 @@ const Sales: React.FC = () => {
           }));
 
         setOutlets(nextOutlets);
-        setSelectedOutletId((current) => current ?? '');
       } catch (error) {
         console.error('Failed to load outlets for sales:', error);
       }
@@ -66,21 +66,7 @@ const Sales: React.FC = () => {
       case 'analytics':
         return <SalesAnalytics outletId={effectiveOutletId} />;
       case 'customers':
-        return (
-          <div className="sales">
-            <div className="sales__header">
-              <h1 className="sales__title">Customer Management</h1>
-              <p className="sales__subtitle">Manage your customers and loyalty programs</p>
-            </div>
-            <div className="sales-empty">
-              <div className="sales-empty__icon">👥</div>
-              <p className="sales-empty__text">Customer Management</p>
-              <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
-                Customer management features coming soon
-              </p>
-            </div>
-          </div>
-        );
+        return <CustomerManagement />;
       default:
         return <PosInterface outletId={effectiveOutletId} />;
     }

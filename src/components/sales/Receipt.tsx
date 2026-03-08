@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSettingsStore } from '../../lib/store/useSettingsStore';
 import { formatCurrency, formatDate } from '../../lib/utils/utils';
 import './sales.css';
 
@@ -22,6 +23,7 @@ interface ReceiptProps {
 }
 
 const Receipt: React.FC<ReceiptProps> = ({ sale, onClose, onPrint }) => {
+  const { settings } = useSettingsStore();
   const subtotal = sale.totalAmount - sale.taxAmount + sale.discountAmount;
 
   const handlePrint = () => {
@@ -71,7 +73,7 @@ const Receipt: React.FC<ReceiptProps> = ({ sale, onClose, onPrint }) => {
         )}
         
         <div className="receipt__total-row">
-          <span className="receipt__total-label">Tax (7.5%):</span>
+            <span className="receipt__total-label">Tax ({settings.sales.vatRate}%):</span>
           <span className="receipt__total-value">{formatCurrency(sale.taxAmount)}</span>
         </div>
         

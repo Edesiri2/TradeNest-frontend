@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { useWarehouseStore } from '../../lib/store/warehouseStore';
+import { productStore } from '../../lib/store/productStore';
 import { Button, ConfirmDialog, Modal, Table } from '../ui';
 import './warehouse.css';
 import { toast } from 'sonner';
@@ -91,6 +92,8 @@ const WarehouseModule: React.FC = () => {
     setSelectedWarehouse
   } = useWarehouseStore();
 
+  // Get products directly from the store with pagination
+  const { products, fetchProducts, loading: productsLoading, pagination } = productStore();
   const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'outlets'>('overview');
   const [showCreateWarehouse, setShowCreateWarehouse] = useState(false);
   const [showEditWarehouse, setShowEditWarehouse] = useState(false);
@@ -99,6 +102,7 @@ const WarehouseModule: React.FC = () => {
   const [warehouseToDelete, setWarehouseToDelete] = useState<Warehouse | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
+  const [inventoryCurrentPage, setInventoryCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchWarehouses();
@@ -109,6 +113,27 @@ const WarehouseModule: React.FC = () => {
       setSelectedWarehouse(warehouses[0]);
     }
   }, [warehouses, selectedWarehouse, setSelectedWarehouse]);
+
+  useEffect(() => {
+    if (selectedWarehouse) {
+      const params = {
+        locationType: 'warehouse',
+        locationId: selectedWarehouse.id,
+        page: inventoryCurrentPage,
+        limit: 10
+      };
+      fetchProducts(params);
+    }
+  }, [selectedWarehouse, fetchProducts, inventoryCurrentPage]);
+
+  // Reset to page 1 when warehouse changes
+  useEffect(() => {
+    setInventoryCurrentPage(1);
+  }, [selectedWarehouse]);
+
+  const handleInventoryPageChange = (newPage: number) => {
+    setInventoryCurrentPage(newPage);
+  };
 
   const refreshWarehouses = async (preferredWarehouseId?: string) => {
     await fetchWarehouses();
@@ -172,11 +197,6 @@ const WarehouseModule: React.FC = () => {
       setDeleteLoading(false);
     }
   };
-
-  const selectedInventory = useMemo(
-    () => getInventoryItems(selectedWarehouse as Warehouse | null),
-    [selectedWarehouse]
-  );
 
   if (loading && warehouses.length === 0) {
     return <div className="loading">Loading warehouses...</div>;
@@ -256,8 +276,22 @@ const WarehouseModule: React.FC = () => {
         {activeTab === 'inventory' && (
           <InventoryTab
             warehouse={selectedWarehouse as Warehouse | null}
-            inventory={selectedInventory}
-            loading={loading}
+            inventory={products.map((product: any) => ({
+              id: product.id,
+              sku: product.sku,
+              productName: product.name,
+              category: resolveCategoryName(product.category),
+              quantity: product.currentStock,
+              reorderLevel: product.lowStockAlert || 0,
+              unitPrice: product.costPrice,
+              totalValue: product.costPrice * product.currentStock,
+              locationType: product.locationType,
+              locationName: product.locationName
+            }))}
+            loading={productsLoading}
+            pagination={pagination}
+            onPageChange={handleInventoryPageChange}
+            currentPage={inventoryCurrentPage}
           />
         )}
 
@@ -437,11 +471,29 @@ const OverviewTab: React.FC<{
   );
 };
 
-const InventoryTab: React.FC<{
+interface InventoryTabProps {
   warehouse: Warehouse | null;
   inventory: InventoryItem[];
   loading: boolean;
-}> = ({ warehouse, inventory, loading }) => {
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalProducts: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+  onPageChange?: (page: number) => void;
+  currentPage?: number;
+}
+
+const InventoryTab: React.FC<InventoryTabProps> = ({ 
+  warehouse, 
+  inventory, 
+  loading,
+  pagination,
+  onPageChange,
+  currentPage = 1
+}) => {
   if (!warehouse) {
     return <div className="no-data">No warehouse selected</div>;
   }
@@ -459,6 +511,18 @@ const InventoryTab: React.FC<{
     {
       key: 'productName',
       title: 'Product'
+    },
+    {
+      key: 'locationType',
+      title: 'Type',
+      render: (value) => {
+        const str = String(value || '-');
+        return str.charAt(0).toUpperCase() + str.slice(1);
+      }
+    },
+    {
+      key: 'locationName',
+      title: 'Location'
     },
     {
       key: 'category',
@@ -507,6 +571,11 @@ const InventoryTab: React.FC<{
     <div className="inventory-tab">
       <div className="section-header">
         <h2>Inventory - {warehouse.name}</h2>
+        {pagination && (
+          <span className="total-count">
+            Total Products: {pagination.totalProducts}
+          </span>
+        )}
       </div>
 
       <div className="metrics-grid">
@@ -535,6 +604,30 @@ const InventoryTab: React.FC<{
         loading={loading}
         emptyText="No inventory records found for this warehouse."
       />
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="pagination">
+          <button
+            className="pagination-btn"
+            disabled={!pagination.hasPrev}
+            onClick={() => onPageChange?.(currentPage - 1)}
+          >
+            Previous
+          </button>
+
+          <span className="pagination-info">
+            Page {pagination.currentPage} of {pagination.totalPages}
+          </span>
+
+          <button
+            className="pagination-btn"
+            disabled={!pagination.hasNext}
+            onClick={() => onPageChange?.(currentPage + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -984,6 +1077,15 @@ const getWarehouseDeleteErrorMessage = (error: unknown): string => {
   }
 
   return baseMessage;
+};
+
+const resolveCategoryName = (category: unknown): string => {
+  if (typeof category === 'string') return category;
+  if (category && typeof category === 'object') {
+    const categoryObject = category as { name?: string; category?: string };
+    return categoryObject.name || categoryObject.category || '';
+  }
+  return '';
 };
 
 export default WarehouseModule;

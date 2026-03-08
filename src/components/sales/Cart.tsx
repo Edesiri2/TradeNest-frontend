@@ -1,7 +1,9 @@
 import React from 'react';
 import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
 import { useSalesStore } from '../../lib/store/salesStore';
+import { useSettingsStore } from '../../lib/store/useSettingsStore';
 import { formatCurrency } from '../../lib/utils/utils';
+import { computeCheckoutSummary } from '../../lib/utils/checkout';
 import './sales.css';
 
 interface CartProps {
@@ -11,6 +13,7 @@ interface CartProps {
 
 const Cart: React.FC<CartProps> = ({ onCheckout, onClearCart }) => {
   const { cart, updateCartItem, removeFromCart, getCartTotal, getCartItemCount } = useSalesStore();
+  const { settings } = useSettingsStore();
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -21,8 +24,9 @@ const Cart: React.FC<CartProps> = ({ onCheckout, onClearCart }) => {
   };
 
   const subtotal = getCartTotal();
-  const tax = subtotal * 0.075;
-  const total = subtotal + tax;
+  const checkoutSummary = computeCheckoutSummary(cart, settings);
+  const tax = checkoutSummary.totalVat;
+  const total = checkoutSummary.total;
 
   if (cart.length === 0) {
     return (
@@ -110,7 +114,7 @@ const Cart: React.FC<CartProps> = ({ onCheckout, onClearCart }) => {
             <span className="pos-cart__total-value">{formatCurrency(subtotal)}</span>
           </div>
           <div className="pos-cart__total-row">
-            <span className="pos-cart__total-label">Tax (7.5%):</span>
+            <span className="pos-cart__total-label">Tax ({settings.sales.vatRate}%):</span>
             <span className="pos-cart__total-value">{formatCurrency(tax)}</span>
           </div>
           <div className="pos-cart__total-row pos-cart__total-row--grand">

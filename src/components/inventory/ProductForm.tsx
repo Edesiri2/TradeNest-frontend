@@ -34,7 +34,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
     lowStockAlert: '',
     supplierId: '',
     locationType: '',
-    locationId: ''
+    locationId: '',
+    isVatable: true,
+    isVatInclusive: false
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -57,7 +59,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
         lowStockAlert: product.lowStockAlert.toString(),
         supplierId: product.supplierId || '',
         locationType: product.locationType || '',
-        locationId: product.locationId || ''
+        locationId: product.locationId || '',
+        isVatable: product.isVatable ?? true,
+        isVatInclusive: product.isVatInclusive ?? false
       });
     } else {
       // Set defaults for new product
@@ -65,7 +69,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
         ...prev,
         category: '',
         lowStockAlert: '5',
-        currentStock: '0'
+        currentStock: '0',
+        isVatable: true,
+        isVatInclusive: false
       }));
     }
   }, [product]);
@@ -191,6 +197,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
       supplierId: formData.supplierId || '',
       locationType: formData.locationType,
       locationId: formData.locationId,
+      isVatable: formData.isVatable,
+      isVatInclusive: formData.isVatInclusive,
       status: parseInt(formData.currentStock, 10) > 0 ? 'in-stock' : 'out-of-stock'
     };
 
@@ -219,7 +227,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
     }
   };
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: string | boolean) => {
     if (field === 'locationType') {
       // When locationType changes, reset locationId to ensure correct location is selected
       setFormData(prev => ({ ...prev, [field]: value, locationId: '' }));
@@ -367,6 +375,32 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
                 disabled={loading}
               />
               {errors.lowStockAlert && <span className="error-text">{errors.lowStockAlert}</span>}
+            </div>
+
+            <div className="product-form__group">
+              <label className="product-form__label">Is Vatable?</label>
+              <select
+                value={formData.isVatable ? 'true' : 'false'}
+                onChange={(e) => handleChange('isVatable', e.target.value === 'true')}
+                className="product-form__select"
+                disabled={loading}
+              >
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+
+            <div className="product-form__group">
+              <label className="product-form__label">VAT Mode</label>
+              <select
+                value={formData.isVatInclusive ? 'inclusive' : 'exclusive'}
+                onChange={(e) => handleChange('isVatInclusive', e.target.value === 'inclusive')}
+                className="product-form__select"
+                disabled={loading || !formData.isVatable}
+              >
+                <option value="exclusive">Exclusive</option>
+                <option value="inclusive">Inclusive</option>
+              </select>
             </div>
 
             {/* LOCATION FIELDS */}

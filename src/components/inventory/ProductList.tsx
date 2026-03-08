@@ -3,7 +3,7 @@ import { Search, Plus, Edit, Trash2, Package } from 'lucide-react';
 import { productStore } from '../../lib/store/productStore';
 import { useAuthStore } from '../../lib/store/useAuthStore';
 import { formatCurrency } from '../../lib/utils/utils';
-import { Button } from '../ui';
+import { Button, Table } from '../ui';
 import './inventory.css';
 
 interface ProductListProps {
@@ -47,6 +47,130 @@ const ProductList: React.FC<ProductListProps> = ({
         .map((category: any) => resolveCategoryName(category))
         .filter((name: string) => Boolean(name)),
     [categories]
+  );
+
+  const columns = [
+    {
+      key: 'sku',
+      title: 'SKU',
+      render: (value: any) => <span className="sku">{value}</span>
+    },
+    {
+      key: 'name',
+      title: 'Product Name',
+      render: (value: any, record: any) => (
+        <div className="product-name">
+          <div className="product-name__primary">{value}</div>
+          {record.description && (
+            <div className="product-name__description">{record.description}</div>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'locationType',
+      title: 'Type',
+      render: (value: any) => {
+        const str = String(value || '-');
+        return str.charAt(0).toUpperCase() + str.slice(1);
+      }
+    },
+    {
+      key: 'locationName',
+      title: 'Location'
+    },
+    {
+      key: 'category',
+      title: 'Category',
+      render: (value: any) => resolveCategoryName(value) || '-'
+    },
+    {
+      key: 'brand',
+      title: 'Brand'
+    },
+    {
+      key: 'costPrice',
+      title: 'Cost Price',
+      render: (value: any) => <span className="price">{formatCurrency(value)}</span>
+    },
+    {
+      key: 'sellingPrice',
+      title: 'Selling Price',
+      render: (value: any) => <span className="price">{formatCurrency(value)}</span>
+    },
+    {
+      key: 'currentStock',
+      title: 'Stock',
+      render: (value: any, record: any) => {
+        const stockLevel = getStockLevel(record);
+        return (
+          <span className={`stock-level ${stockLevel}`}>
+            {value}
+            {stockLevel === 'low-stock' && <span className="stock-alert"> (Low)</span>}
+            {stockLevel === 'out-of-stock' && <span className="stock-alert"> (Out)</span>}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'status',
+      title: 'Status',
+      render: (value: any, record: any) => {
+        const status = resolveProductStatus(record);
+        return (
+          <span className={`status-badge ${status === 'in-stock' ? 'active' : 'danger'}`}>
+            {status === 'in-stock' ? 'In Stock' : 'Out of Stock'}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'actions',
+      title: 'Actions',
+      render: (value: any, record: any) => (
+        <div className="action-buttons">
+          <button
+            onClick={() => onEditProduct(record)}
+            className="action-btn edit"
+            title="Edit product"
+          >
+            <Edit size={16} />
+          </button>
+          <button
+            onClick={() => handleDelete(record.id, record.name)}
+            className="action-btn delete"
+            title="Delete product"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  const emptyText = (
+    <div className="empty-state">
+      <Package size={48} className="empty-state__icon" />
+      <h3 className="empty-state__title">No products found</h3>
+      <p className="empty-state__description">
+        {searchTerm ||
+        categoryFilter !== 'all' ||
+        statusFilter !== 'all' ||
+        enforcedLocationType !== 'all' ||
+        enforcedLocationId !== 'all'
+          ? 'Try adjusting your search or filter criteria'
+          : 'Get started by adding your first product'}
+      </p>
+      {!searchTerm &&
+        categoryFilter === 'all' &&
+        statusFilter === 'all' &&
+        enforcedLocationType === 'all' &&
+        enforcedLocationId === 'all' && (
+          <Button onClick={onAddProduct} icon={Plus} variant="primary">
+            Add First Product
+          </Button>
+        )}
+    </div>
   );
 
   const buildFetchParams = (page = 1) => {
@@ -165,98 +289,12 @@ const ProductList: React.FC<ProductListProps> = ({
       </div>
 
       <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>Product Name</th>
-              <th>Category</th>
-              <th>Brand</th>
-              <th>Cost Price</th>
-              <th>Selling Price</th>
-              <th>Stock</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product: any) => {
-              const stockLevel = getStockLevel(product);
-              const status = resolveProductStatus(product);
-
-              return (
-                <tr key={product.id}>
-                  <td className="sku">{product.sku}</td>
-                  <td className="product-name">
-                    <div className="product-name__primary">{product.name}</div>
-                    {product.description && (
-                      <div className="product-name__description">{product.description}</div>
-                    )}
-                  </td>
-                  <td>{resolveCategoryName(product.category) || '-'}</td>
-                  <td>{product.brand}</td>
-                  <td className="price">{formatCurrency(product.costPrice)}</td>
-                  <td className="price">{formatCurrency(product.sellingPrice)}</td>
-                  <td>
-                    <span className={`stock-level ${stockLevel}`}>
-                      {product.currentStock}
-                      {stockLevel === 'low-stock' && <span className="stock-alert"> (Low)</span>}
-                      {stockLevel === 'out-of-stock' && <span className="stock-alert"> (Out)</span>}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${status === 'in-stock' ? 'active' : 'danger'}`}>
-                      {status === 'in-stock' ? 'In Stock' : 'Out of Stock'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        onClick={() => onEditProduct(product)}
-                        className="action-btn edit"
-                        title="Edit product"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id, product.name)}
-                        className="action-btn delete"
-                        title="Delete product"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-
-        {products.length === 0 && !loading && (
-          <div className="empty-state">
-            <Package size={48} className="empty-state__icon" />
-            <h3 className="empty-state__title">No products found</h3>
-            <p className="empty-state__description">
-              {searchTerm ||
-              categoryFilter !== 'all' ||
-              statusFilter !== 'all' ||
-              enforcedLocationType !== 'all' ||
-              enforcedLocationId !== 'all'
-                ? 'Try adjusting your search or filter criteria'
-                : 'Get started by adding your first product'}
-            </p>
-            {!searchTerm &&
-              categoryFilter === 'all' &&
-              statusFilter === 'all' &&
-              enforcedLocationType === 'all' &&
-              enforcedLocationId === 'all' && (
-                <Button onClick={onAddProduct} icon={Plus} variant="primary">
-                  Add First Product
-                </Button>
-              )}
-          </div>
-        )}
+        <Table
+          columns={columns}
+          data={products}
+          emptyText={emptyText}
+          striped
+        />
       </div>
 
       {pagination.totalPages > 1 && (

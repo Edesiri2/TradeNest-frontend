@@ -3,6 +3,8 @@
   --sales-bg: #f8fafc;
   --sales-card-bg: #ffffff;
   --sales-primary: #3b82f6;
+  --brand-primary-from: #4f46e5;
+  --brand-primary-to: #7c3aed;
   --sales-success: #10b981;
   --sales-warning: #f59e0b;
   --sales-error: #ef4444;
@@ -381,7 +383,7 @@
 .pos-cart__total-row--grand .pos-cart__total-value {
   font-size: 1.25rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, var(--brand-primary-from), var(--brand-primary-to));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -408,13 +410,13 @@
 }
 
 .pos-cart__action-btn--primary {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, var(--brand-primary-from), var(--brand-primary-to));
   color: white;
   box-shadow: 0 10px 20px rgba(79, 70, 229, 0.22);
 }
 
 .pos-cart__action-btn--primary:hover {
-  background: linear-gradient(135deg, #4338ca, #6d28d9);
+  background: linear-gradient(135deg, var(--brand-primary-from), var(--brand-primary-to));
   transform: translateY(-1px);
 }
 
@@ -533,6 +535,8 @@
   margin: 0 auto;
   box-shadow: var(--card-shadow);
   border-radius: var(--card-radius);
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
 }
 
 .sales-modal-backdrop {
@@ -549,6 +553,8 @@
 .sales-modal-content {
   width: 100%;
   max-width: 460px;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
 }
 
 .receipt__header {

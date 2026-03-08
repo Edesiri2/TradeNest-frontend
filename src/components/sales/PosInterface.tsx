@@ -68,7 +68,10 @@ const PosInterface: React.FC<PosInterfaceProps> = ({ outletId }) => {
       productName: product.name,
       quantity: 1,
       unitPrice: product.sellingPrice,
-      stock: product.currentStock
+      stock: product.currentStock,
+      isVatable: product.isVatable,
+      isVatInclusive: product.isVatInclusive,
+      sku: product.sku
     });
   };
 
@@ -223,7 +226,7 @@ const PosInterface: React.FC<PosInterfaceProps> = ({ outletId }) => {
       {/* Payment Modal */}
       {showPaymentModal && (
         <PaymentModal
-          totalAmount={getCartTotal() * 1.075}
+          totalAmount={getCartTotal()}
           onClose={() => setShowPaymentModal(false)}
           onPaymentComplete={handlePaymentComplete}
         />
